@@ -8,6 +8,7 @@ using DataAccessLayer;
 using Microsoft.Extensions.Configuration;
 using Repositories.Implementations;
 using Repositories.Interfaces;
+using Services.Helpers;
 using Services.Interfaces;
 using Services.Models;
 
@@ -24,8 +25,8 @@ public class AuthService : IAuthService
 
         using var context = new IPhoneInventoryDbContext();
 
-        var admin = context.Admins.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail && x.Password == normalizedPassword && x.Status == "Active");
-        if (admin is not null)
+        var admin = context.Admins.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail && x.Status == "Active");
+        if (admin is not null && IsValidHashedPassword(admin.Password, normalizedPassword))
         {
             return new AuthenticatedUser
             {
@@ -48,8 +49,8 @@ public class AuthService : IAuthService
             };
         }
 
-        var staff = context.Staff.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail && x.Password == normalizedPassword && x.Status == "Active");
-        if (staff is not null)
+        var staff = context.Staff.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail && x.Status == "Active");
+        if (staff is not null && IsValidHashedPassword(staff.Password, normalizedPassword))
         {
             return new AuthenticatedUser
             {
@@ -59,8 +60,8 @@ public class AuthService : IAuthService
             };
         }
 
-        var customer = _customerRepository.GetCustomerByEmailAndPassword(normalizedEmail, normalizedPassword);
-        if (customer is not null && customer.Status == "Active")
+        var customer = context.Customers.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail && x.Status == "Active");
+        if (customer is not null && IsValidHashedPassword(customer.Password, normalizedPassword))
         {
             return new AuthenticatedUser
             {
@@ -130,7 +131,7 @@ public class AuthService : IAuthService
             FullName = fullName,
             Email = email,
             Phone = phone,
-            Password = password,
+            Password = PasswordHasher.Hash(password),
             Status = "Active"
         };
 
@@ -143,6 +144,11 @@ public class AuthService : IAuthService
         {
             return new RegisterCustomerResult { Success = false, Message = "Unable to create the account right now." };
         }
+    }
+
+    private static bool IsValidHashedPassword(string storedPassword, string providedPassword)
+    {
+        return PasswordHasher.IsHash(storedPassword) && PasswordHasher.Verify(providedPassword, storedPassword);
     }
 
     private static bool IsValidFullName(string fullName)
@@ -209,7 +215,3 @@ public class AuthService : IAuthService
         public string Password { get; set; } = string.Empty;
     }
 }
-
-
-
-
