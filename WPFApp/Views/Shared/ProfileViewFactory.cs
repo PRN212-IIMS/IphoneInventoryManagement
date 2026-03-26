@@ -83,9 +83,9 @@ public static class ProfileViewFactory
         outer.Children.Add(headerGrid);
         outer.Children.Add(new Border { Height = 1, Background = UiFactory.Brush("#EBF0F6") });
 
-        var contentGrid = new Grid { Margin = new Thickness(50, 44, 50, 34) };
+        var contentGrid = new Grid { Margin = new Thickness(34, 24, 34, 12) };
         contentGrid.ColumnDefinitions.Add(new ColumnDefinition());
-        contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(40) });
+        contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
         contentGrid.ColumnDefinitions.Add(new ColumnDefinition());
         contentGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         contentGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -122,7 +122,7 @@ public static class ProfileViewFactory
 
         outer.Children.Add(contentGrid);
 
-        var footer = new StackPanel { Margin = new Thickness(50, 0, 50, 34) };
+        var footer = new StackPanel { Margin = new Thickness(34, 0, 34, 20) };
         if (!string.IsNullOrWhiteSpace(message))
         {
             footer.Children.Add(new TextBlock
@@ -131,12 +131,12 @@ public static class ProfileViewFactory
                 FontFamily = UiFactory.Font("Bahnschrift"),
                 FontSize = 14,
                 Foreground = isError ? UiFactory.Brush("#D9534F") : UiFactory.Brush("#17A570"),
-                Margin = new Thickness(0, 0, 0, 14),
+                Margin = new Thickness(0, 0, 0, 8),
                 TextWrapping = TextWrapping.Wrap
             });
         }
 
-        footer.Children.Add(new Border { Height = 1, Background = UiFactory.Brush("#EBF0F6"), Margin = new Thickness(0, 0, 0, 18) });
+        footer.Children.Add(new Border { Height = 1, Background = UiFactory.Brush("#EBF0F6"), Margin = new Thickness(0, 0, 0, 14) });
         var actionRow = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
         var cancelButton = UiFactory.CreateOutlineButton("Cancel");
         cancelButton.Width = 150;
@@ -145,6 +145,122 @@ public static class ProfileViewFactory
         saveButton.Click += (_, _) => onSave(fullNameBox.Text, phoneBox.Text);
         actionRow.Children.Add(cancelButton);
         actionRow.Children.Add(saveButton);
+        footer.Children.Add(actionRow);
+        outer.Children.Add(footer);
+
+        card.Child = outer;
+        return card;
+    }
+
+    public static Border CreateChangePasswordCard(
+        Action onCancel,
+        Action<string, string, string> onSave,
+        string? message,
+        bool isError,
+        string currentPassword = "",
+        string newPassword = "",
+        string confirmNewPassword = "")
+    {
+        var card = CreateBaseCard();
+        var outer = new StackPanel();
+
+        var headerGrid = CreateHeaderGrid("Security Settings", "Update your account password securely.");
+        var eyeHolder = new Border
+        {
+            Width = 46,
+            Height = 46,
+            CornerRadius = new CornerRadius(16),
+            Background = UiFactory.Brush("#F7FAFE"),
+            Child = CreateEyeIcon(false)
+        };
+        Grid.SetColumn(eyeHolder, 1);
+        headerGrid.Children.Add(eyeHolder);
+        outer.Children.Add(headerGrid);
+        outer.Children.Add(new Border { Height = 1, Background = UiFactory.Brush("#EBF0F6") });
+
+        var contentGrid = new Grid { Margin = new Thickness(34, 24, 34, 12) };
+        contentGrid.ColumnDefinitions.Add(new ColumnDefinition());
+        contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
+        contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(360) });
+
+        var leftColumn = new StackPanel();
+        var currentPasswordField = CreateTogglePasswordField("CURRENT PASSWORD", "\uE72E");
+        var newPasswordField = CreateTogglePasswordField("NEW PASSWORD", "\uE73E");
+        var confirmPasswordField = CreateTogglePasswordField("CONFIRM NEW PASSWORD", "\uE73E");
+        currentPasswordField.SetPassword(currentPassword);
+        newPasswordField.SetPassword(newPassword);
+        confirmPasswordField.SetPassword(confirmNewPassword);
+        leftColumn.Children.Add(currentPasswordField.Container);
+        leftColumn.Children.Add(newPasswordField.Container);
+        leftColumn.Children.Add(confirmPasswordField.Container);
+        Grid.SetColumn(leftColumn, 0);
+        contentGrid.Children.Add(leftColumn);
+
+        var rulesPanel = new Border
+        {
+            Background = UiFactory.Brush("#F6FAFE"),
+            CornerRadius = new CornerRadius(18),
+            BorderBrush = UiFactory.Brush("#E1EBF6"),
+            BorderThickness = new Thickness(1),
+            Padding = new Thickness(18, 18, 18, 18),
+            VerticalAlignment = VerticalAlignment.Top
+        };
+        var rulesStack = new StackPanel();
+        rulesStack.Children.Add(CreateSectionLabel("PASSWORD RULES"));
+        rulesStack.Children.Add(CreateRuleBullet("Minimum 8 characters long"));
+        rulesStack.Children.Add(CreateRuleBullet("Must include at least 1 uppercase letter"));
+        rulesStack.Children.Add(CreateRuleBullet("Must include at least 1 number"));
+        rulesStack.Children.Add(CreateRuleBullet("Must include at least 1 special character"));
+        rulesStack.Children.Add(CreateRuleBullet("Cannot contain any spaces"));
+        rulesStack.Children.Add(CreateRuleBullet("Cannot be the same as current password"));
+        rulesStack.Children.Add(new Border
+        {
+            Margin = new Thickness(0, 12, 0, 0),
+            Padding = new Thickness(14, 12, 14, 12),
+            Background = UiFactory.Brush("#ECFBFF"),
+            CornerRadius = new CornerRadius(16),
+            Child = new TextBlock
+            {
+                Text = "Strong passwords help protect your account from unauthorized access.",
+                FontFamily = UiFactory.Font("Bahnschrift"),
+                FontSize = 14,
+                Foreground = UiFactory.Brush("#0B84B6"),
+                TextWrapping = TextWrapping.Wrap,
+                LineHeight = 21
+            }
+        });
+        rulesPanel.Child = rulesStack;
+        Grid.SetColumn(rulesPanel, 2);
+        contentGrid.Children.Add(rulesPanel);
+
+        outer.Children.Add(contentGrid);
+
+        var footer = new StackPanel { Margin = new Thickness(34, 0, 34, 20) };
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            footer.Children.Add(new TextBlock
+            {
+                Text = message,
+                FontFamily = UiFactory.Font("Bahnschrift"),
+                FontSize = 14,
+                Foreground = isError ? UiFactory.Brush("#D9534F") : UiFactory.Brush("#17A570"),
+                Margin = new Thickness(0, 0, 0, 8),
+                TextWrapping = TextWrapping.Wrap
+            });
+        }
+
+        footer.Children.Add(new Border { Height = 1, Background = UiFactory.Brush("#EBF0F6"), Margin = new Thickness(0, 0, 0, 14) });
+        var actionRow = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+        var cancelButton = UiFactory.CreateOutlineButton("Cancel");
+        cancelButton.Width = 150;
+        cancelButton.Click += (_, _) => onCancel();
+        var updateButton = UiFactory.CreateButton("Update Password", UiFactory.Brush("#0F9CC1"), Brushes.White, 54, 246, new Thickness(16, 0, 0, 0));
+        updateButton.Click += (_, _) => onSave(
+            currentPasswordField.GetPassword(),
+            newPasswordField.GetPassword(),
+            confirmPasswordField.GetPassword());
+        actionRow.Children.Add(cancelButton);
+        actionRow.Children.Add(updateButton);
         footer.Children.Add(actionRow);
         outer.Children.Add(footer);
 
@@ -315,4 +431,204 @@ public static class ProfileViewFactory
     {
         return new TextBox();
     }
+
+    private static PasswordBox CreateInputPasswordBox()
+    {
+        return new PasswordBox();
+    }
+
+    private static TogglePasswordField CreateTogglePasswordField(string label, string icon)
+    {
+        var passwordBox = CreateInputPasswordBox();
+        var plainTextBox = CreateInputTextBox();
+        plainTextBox.Visibility = Visibility.Collapsed;
+
+        passwordBox.Background = Brushes.Transparent;
+        passwordBox.BorderThickness = new Thickness(0);
+        passwordBox.FontFamily = UiFactory.Font("Bahnschrift");
+        passwordBox.FontSize = 17;
+        passwordBox.Foreground = UiFactory.Brush("#17345C");
+        passwordBox.VerticalAlignment = VerticalAlignment.Center;
+        passwordBox.Padding = new Thickness(0, 2, 0, 2);
+        passwordBox.Margin = new Thickness(0, -1, 0, 0);
+
+        plainTextBox.Background = Brushes.Transparent;
+        plainTextBox.BorderThickness = new Thickness(0);
+        plainTextBox.FontFamily = UiFactory.Font("Bahnschrift");
+        plainTextBox.FontSize = 17;
+        plainTextBox.Foreground = UiFactory.Brush("#17345C");
+        plainTextBox.VerticalContentAlignment = VerticalAlignment.Center;
+        plainTextBox.VerticalAlignment = VerticalAlignment.Center;
+        plainTextBox.Padding = new Thickness(0, 2, 0, 2);
+        plainTextBox.Margin = new Thickness(0, -1, 0, 0);
+
+        var toggleButton = new Button
+        {
+            Width = 28,
+            Height = 28,
+            Background = Brushes.Transparent,
+            BorderThickness = new Thickness(0),
+            Cursor = System.Windows.Input.Cursors.Hand,
+            Content = CreateEyeIcon(false)
+        };
+
+        passwordBox.PasswordChanged += (_, _) =>
+        {
+            if (plainTextBox.Visibility != Visibility.Visible)
+            {
+                plainTextBox.Text = passwordBox.Password;
+            }
+        };
+
+        plainTextBox.TextChanged += (_, _) =>
+        {
+            if (plainTextBox.Visibility == Visibility.Visible)
+            {
+                passwordBox.Password = plainTextBox.Text;
+            }
+        };
+
+        toggleButton.Click += (_, _) =>
+        {
+            var isVisible = plainTextBox.Visibility == Visibility.Visible;
+            if (isVisible)
+            {
+                passwordBox.Password = plainTextBox.Text;
+                plainTextBox.Visibility = Visibility.Collapsed;
+                passwordBox.Visibility = Visibility.Visible;
+                toggleButton.Content = CreateEyeIcon(false);
+            }
+            else
+            {
+                plainTextBox.Text = passwordBox.Password;
+                passwordBox.Visibility = Visibility.Collapsed;
+                plainTextBox.Visibility = Visibility.Visible;
+                toggleButton.Content = CreateEyeIcon(true);
+            }
+        };
+
+        var stack = new StackPanel { Margin = new Thickness(0, 0, 0, 18) };
+        stack.Children.Add(new TextBlock
+        {
+            Text = label,
+            FontFamily = UiFactory.Font("Bahnschrift SemiBold"),
+            FontSize = 15,
+            Foreground = UiFactory.Brush("#6D7E9C"),
+            Margin = new Thickness(0, 0, 0, 8)
+        });
+
+        var border = new Border
+        {
+            Height = 52,
+            Background = UiFactory.Brush("#F9FBFE"),
+            BorderBrush = UiFactory.Brush("#D6E0EE"),
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(6),
+            Padding = new Thickness(14, 0, 14, 0)
+        };
+
+        var grid = new Grid();
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition());
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+        var leadingIcon = UiFactory.Mdl2(icon, 16, UiFactory.Brush("#8BA2C2"), new Thickness(0, 0, 12, 0));
+        leadingIcon.VerticalAlignment = VerticalAlignment.Center;
+        grid.Children.Add(leadingIcon);
+
+        Grid.SetColumn(passwordBox, 1);
+        Grid.SetColumn(plainTextBox, 1);
+        grid.Children.Add(passwordBox);
+        grid.Children.Add(plainTextBox);
+
+        Grid.SetColumn(toggleButton, 2);
+        grid.Children.Add(toggleButton);
+
+        border.Child = grid;
+        stack.Children.Add(border);
+
+        return new TogglePasswordField(stack, passwordBox, plainTextBox);
+    }
+
+    private static Grid CreateEyeIcon(bool crossed)
+    {
+        var grid = new Grid { Width = 18, Height = 18 };
+        var eye = UiFactory.Mdl2("\uE890", 16, UiFactory.Brush("#8BA2C2"));
+        grid.Children.Add(eye);
+
+        if (crossed)
+        {
+            grid.Children.Add(new Border
+            {
+                Width = 16,
+                Height = 1.8,
+                Background = UiFactory.Brush("#8BA2C2"),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 1, 0, 0),
+                RenderTransformOrigin = new Point(0.5, 0.5),
+                RenderTransform = new RotateTransform(-28)
+            });
+        }
+
+        return grid;
+    }
+
+    private static StackPanel CreateRuleBullet(string text)
+    {
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 18, 0, 0) };
+        row.Children.Add(new Border
+        {
+            Width = 8,
+            Height = 8,
+            CornerRadius = new CornerRadius(4),
+            Background = UiFactory.Brush("#14BEE8"),
+            Margin = new Thickness(0, 8, 12, 0)
+        });
+        row.Children.Add(new TextBlock
+        {
+            Text = text,
+            FontFamily = UiFactory.Font("Bahnschrift"),
+            FontSize = 15,
+            Foreground = UiFactory.Brush("#5E769B"),
+            TextWrapping = TextWrapping.Wrap,
+            Width = 285,
+            LineHeight = 21
+        });
+        return row;
+    }
+
+    private sealed class TogglePasswordField
+    {
+        public TogglePasswordField(FrameworkElement container, PasswordBox passwordBox, TextBox plainTextBox)
+        {
+            Container = container;
+            PasswordBox = passwordBox;
+            PlainTextBox = plainTextBox;
+        }
+
+        public FrameworkElement Container { get; }
+        private PasswordBox PasswordBox { get; }
+        private TextBox PlainTextBox { get; }
+
+        public string GetPassword()
+        {
+            return PlainTextBox.Visibility == Visibility.Visible ? PlainTextBox.Text : PasswordBox.Password;
+        }
+
+        public void SetPassword(string value)
+        {
+            PasswordBox.Password = value ?? string.Empty;
+            PlainTextBox.Text = value ?? string.Empty;
+        }
+    }
 }
+
+
+
+
+
+
+
+
+

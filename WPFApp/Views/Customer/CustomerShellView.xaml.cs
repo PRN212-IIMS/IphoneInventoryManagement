@@ -90,15 +90,15 @@ public partial class CustomerShellView : UserControl
     private void ShowProfile()
     {
         var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        var host = new Grid { Margin = new Thickness(34, 34, 34, 28) };
+        var host = new Grid { Margin = new Thickness(22, 18, 22, 18) };
         var card = ProfileViewFactory.CreateProfileCard(
             _user,
             () => ShowEditProfile(),
-            () => MessageBox.Show("Change password is not connected yet."),
+            () => ShowChangePassword(),
             UiFactory.Brush("#DDF8FF"),
             UiFactory.Brush("#0B7BAA"));
-        card.Width = 1120;
-        card.MaxWidth = 1120;
+        card.Width = 960;
+        card.MaxWidth = 960;
         card.HorizontalAlignment = HorizontalAlignment.Center;
         card.VerticalAlignment = VerticalAlignment.Top;
         host.Children.Add(card);
@@ -110,15 +110,36 @@ public partial class CustomerShellView : UserControl
     private void ShowEditProfile(string? message = null, bool isError = false)
     {
         var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        var host = new Grid { Margin = new Thickness(34, 34, 34, 28) };
+        var host = new Grid { Margin = new Thickness(22, 18, 22, 18) };
         var card = ProfileViewFactory.CreateEditProfileCard(
             _user,
             ShowProfile,
             SaveProfile,
             message,
             isError);
-        card.Width = 1120;
-        card.MaxWidth = 1120;
+        card.Width = 960;
+        card.MaxWidth = 960;
+        card.HorizontalAlignment = HorizontalAlignment.Center;
+        card.VerticalAlignment = VerticalAlignment.Top;
+        host.Children.Add(card);
+        scroll.Content = host;
+        _contentHost.Content = scroll;
+    }
+
+    private void ShowChangePassword(string? message = null, bool isError = false, string currentPassword = "", string newPassword = "", string confirmNewPassword = "")
+    {
+        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        var host = new Grid { Margin = new Thickness(18, 14, 18, 14) };
+        var card = ProfileViewFactory.CreateChangePasswordCard(
+            ShowProfile,
+            SavePassword,
+            message,
+            isError,
+            currentPassword,
+            newPassword,
+            confirmNewPassword);
+        card.Width = 1020;
+        card.MaxWidth = 1020;
         card.HorizontalAlignment = HorizontalAlignment.Center;
         card.VerticalAlignment = VerticalAlignment.Top;
         host.Children.Add(card);
@@ -148,6 +169,26 @@ public partial class CustomerShellView : UserControl
         }
 
         ReloadLayout(ShowProfile);
+    }
+
+    private void SavePassword(string currentPassword, string newPassword, string confirmNewPassword)
+    {
+        var result = _profileService.ChangePassword(new UpdatePasswordRequest
+        {
+            UserId = _user.UserId,
+            Role = _user.Role,
+            CurrentPassword = currentPassword,
+            NewPassword = newPassword,
+            ConfirmNewPassword = confirmNewPassword
+        });
+
+        if (!result.Success)
+        {
+            ShowChangePassword(result.Message, true, currentPassword, newPassword, confirmNewPassword);
+            return;
+        }
+
+        ShowChangePassword(result.Message, false);
     }
 
     private void ApplyUpdatedUser(AuthenticatedUser updatedUser)
@@ -227,4 +268,10 @@ public partial class CustomerShellView : UserControl
         return button;
     }
 }
+
+
+
+
+
+
 

@@ -1,8 +1,9 @@
+using System;
 using System.Linq;
-using System.Net.Mail;
 using System.Text.RegularExpressions;
 using Repositories.Implementations;
 using Repositories.Interfaces;
+using Services.Helpers;
 using Services.Interfaces;
 using Services.Models;
 
@@ -91,4 +92,91 @@ public class ProfileService : IProfileService
 
         return new ProfileOperationResult { Success = false, Message = "This account cannot edit profile information." };
     }
+
+    public ProfileOperationResult ChangePassword(UpdatePasswordRequest request)
+    {
+        var currentPassword = request.CurrentPassword;
+        var newPassword = request.NewPassword;
+        var confirmNewPassword = request.ConfirmNewPassword;
+
+        if (string.IsNullOrWhiteSpace(currentPassword)
+            || string.IsNullOrWhiteSpace(newPassword)
+            || string.IsNullOrWhiteSpace(confirmNewPassword))
+        {
+            return new ProfileOperationResult { Success = false, Message = "Please fill in all password fields." };
+        }
+
+        if (newPassword != confirmNewPassword)
+        {
+            return new ProfileOperationResult { Success = false, Message = "New password confirmation does not match." };
+        }
+
+        if (string.Equals(currentPassword, newPassword, StringComparison.Ordinal))
+        {
+            return new ProfileOperationResult { Success = false, Message = "New password cannot be the same as current password." };
+        }
+
+        if (!IsValidPassword(newPassword))
+        {
+            return new ProfileOperationResult { Success = false, Message = "Password must be at least 8 characters, include 1 uppercase letter, 1 number, 1 special character, and contain no spaces." };
+        }
+
+        if (request.Role == "Customer")
+        {
+            var customer = _customerRepository.GetCustomerById(request.UserId);
+            if (customer is null)
+            {
+                return new ProfileOperationResult { Success = false, Message = "Customer account was not found." };
+            }
+
+            if (!IsValidStoredPassword(customer.Password, currentPassword))
+            {
+                return new ProfileOperationResult { Success = false, Message = "Current password is incorrect." };
+            }
+
+            customer.Password = PasswordHasher.Hash(newPassword);
+            _customerRepository.UpdateCustomer(customer);
+            return new ProfileOperationResult { Success = true, Message = "Password updated successfully." };
+        }
+
+        if (request.Role == "Staff")
+        {
+            var staff = _staffRepository.GetStaffById(request.UserId);
+            if (staff is null)
+            {
+                return new ProfileOperationResult { Success = false, Message = "Staff account was not found." };
+            }
+
+            if (!IsValidStoredPassword(staff.Password, currentPassword))
+            {
+                return new ProfileOperationResult { Success = false, Message = "Current password is incorrect." };
+            }
+
+            staff.Password = PasswordHasher.Hash(newPassword);
+            _staffRepository.UpdateStaff(staff);
+            return new ProfileOperationResult { Success = true, Message = "Password updated successfully." };
+        }
+
+        return new ProfileOperationResult { Success = false, Message = "This account cannot change password here." };
+    }
+
+    private static bool IsValidStoredPassword(string storedPassword, string providedPassword)
+    {
+        return PasswordHasher.IsHash(storedPassword) && PasswordHasher.Verify(providedPassword, storedPassword);
+    }
+
+    private static bool IsValidPassword(string password)
+    {
+        if (password.Length < 8 || password.Any(char.IsWhiteSpace))
+        {
+            return false;
+        }
+
+        var hasUppercase = password.Any(char.IsUpper);
+        var hasDigit = password.Any(char.IsDigit);
+        var hasSpecialCharacter = password.Any(ch => !char.IsLetterOrDigit(ch));
+
+        return hasUppercase && hasDigit && hasSpecialCharacter;
+    }
 }
+

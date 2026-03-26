@@ -9,3 +9,5 @@ obj/
 *.exe
 *.log
 TestResults/
+
+.dotnet-home/

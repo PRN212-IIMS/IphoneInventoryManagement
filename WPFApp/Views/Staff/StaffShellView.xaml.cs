@@ -98,7 +98,7 @@ public partial class StaffShellView : UserControl
         var card = ProfileViewFactory.CreateProfileCard(
             _user,
             () => ShowEditProfile(),
-            () => MessageBox.Show("Change password is not connected yet."),
+            () => ShowChangePassword(),
             UiFactory.Brush("#ECF3FF"),
             UiFactory.Brush("#4E73C7"));
         host.Children.Add(card);
@@ -107,15 +107,42 @@ public partial class StaffShellView : UserControl
 
     private void ShowEditProfile(string? message = null, bool isError = false)
     {
-        var host = new Grid { Margin = new Thickness(26, 22, 26, 22) };
+        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        var host = new Grid { Margin = new Thickness(22, 18, 22, 18) };
         var card = ProfileViewFactory.CreateEditProfileCard(
             _user,
             ShowProfile,
             SaveProfile,
             message,
             isError);
+        card.Width = 960;
+        card.MaxWidth = 960;
+        card.HorizontalAlignment = HorizontalAlignment.Center;
+        card.VerticalAlignment = VerticalAlignment.Top;
         host.Children.Add(card);
-        _contentHost.Content = host;
+        scroll.Content = host;
+        _contentHost.Content = scroll;
+    }
+
+    private void ShowChangePassword(string? message = null, bool isError = false, string currentPassword = "", string newPassword = "", string confirmNewPassword = "")
+    {
+        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        var host = new Grid { Margin = new Thickness(22, 18, 22, 18) };
+        var card = ProfileViewFactory.CreateChangePasswordCard(
+            ShowProfile,
+            SavePassword,
+            message,
+            isError,
+            currentPassword,
+            newPassword,
+            confirmNewPassword);
+        card.Width = 960;
+        card.MaxWidth = 960;
+        card.HorizontalAlignment = HorizontalAlignment.Center;
+        card.VerticalAlignment = VerticalAlignment.Top;
+        host.Children.Add(card);
+        scroll.Content = host;
+        _contentHost.Content = scroll;
     }
 
     private void SaveProfile(string fullName, string phone)
@@ -140,6 +167,26 @@ public partial class StaffShellView : UserControl
         }
 
         ReloadLayout(ShowProfile);
+    }
+
+    private void SavePassword(string currentPassword, string newPassword, string confirmNewPassword)
+    {
+        var result = _profileService.ChangePassword(new UpdatePasswordRequest
+        {
+            UserId = _user.UserId,
+            Role = _user.Role,
+            CurrentPassword = currentPassword,
+            NewPassword = newPassword,
+            ConfirmNewPassword = confirmNewPassword
+        });
+
+        if (!result.Success)
+        {
+            ShowChangePassword(result.Message, true, currentPassword, newPassword, confirmNewPassword);
+            return;
+        }
+
+        ShowChangePassword(result.Message, false);
     }
 
     private void ApplyUpdatedUser(AuthenticatedUser updatedUser)
@@ -185,4 +232,10 @@ public partial class StaffShellView : UserControl
         return button;
     }
 }
+
+
+
+
+
+
 
