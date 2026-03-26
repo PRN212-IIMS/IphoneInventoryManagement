@@ -3170,23 +3170,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\ASUS\\.nuget\\packages\\": {},
+    "C:\\Users\\trang\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\GIT\\ProjectGroup5\\Services\\Services.csproj",
+      "projectUniqueName": "D:\\PRN212\\IphoneInventoryManagement\\Services\\Services.csproj",
       "projectName": "Services",
-      "projectPath": "D:\\GIT\\ProjectGroup5\\Services\\Services.csproj",
-      "packagesPath": "C:\\Users\\ASUS\\.nuget\\packages\\",
-      "outputPath": "D:\\GIT\\ProjectGroup5\\Services\\obj\\",
+      "projectPath": "D:\\PRN212\\IphoneInventoryManagement\\Services\\Services.csproj",
+      "packagesPath": "C:\\Users\\trang\\.nuget\\packages\\",
+      "outputPath": "D:\\PRN212\\IphoneInventoryManagement\\Services\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\ASUS\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\trang\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -3201,14 +3201,14 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\GIT\\ProjectGroup5\\BusinessObjects\\BusinessObjects.csproj": {
-              "projectPath": "D:\\GIT\\ProjectGroup5\\BusinessObjects\\BusinessObjects.csproj"
+            "D:\\PRN212\\IphoneInventoryManagement\\BusinessObjects\\BusinessObjects.csproj": {
+              "projectPath": "D:\\PRN212\\IphoneInventoryManagement\\BusinessObjects\\BusinessObjects.csproj"
             },
-            "D:\\GIT\\ProjectGroup5\\DataAccessLayer\\DataAccessLayer.csproj": {
-              "projectPath": "D:\\GIT\\ProjectGroup5\\DataAccessLayer\\DataAccessLayer.csproj"
+            "D:\\PRN212\\IphoneInventoryManagement\\DataAccessLayer\\DataAccessLayer.csproj": {
+              "projectPath": "D:\\PRN212\\IphoneInventoryManagement\\DataAccessLayer\\DataAccessLayer.csproj"
             },
-            "D:\\GIT\\ProjectGroup5\\Repositories\\Repositories.csproj": {
-              "projectPath": "D:\\GIT\\ProjectGroup5\\Repositories\\Repositories.csproj"
+            "D:\\PRN212\\IphoneInventoryManagement\\Repositories\\Repositories.csproj": {
+              "projectPath": "D:\\PRN212\\IphoneInventoryManagement\\Repositories\\Repositories.csproj"
             }
           }
         }
@@ -3223,7 +3223,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "10.0.100"
+      "SdkAnalysisLevel": "10.0.200"
     },
     "frameworks": {
       "net8.0": {
@@ -3244,7 +3244,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.104/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
