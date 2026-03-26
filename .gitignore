@@ -9,3 +9,7 @@ obj/
 *.pdb
 *.dll
 *.exe
+*.log
+TestResults/
+
+.dotnet-home/
