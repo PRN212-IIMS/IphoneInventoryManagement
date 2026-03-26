@@ -9,3 +9,15 @@ D:\PRN212_MYSELF\OOP\IphoneInventoryManagement\Repositories\obj\Debug\net8.0\Rep
 D:\PRN212_MYSELF\OOP\IphoneInventoryManagement\Repositories\obj\Debug\net8.0\refint\Repositories.dll
 D:\PRN212_MYSELF\OOP\IphoneInventoryManagement\Repositories\obj\Debug\net8.0\Repositories.pdb
 D:\PRN212_MYSELF\OOP\IphoneInventoryManagement\Repositories\obj\Debug\net8.0\ref\Repositories.dll
+D:\GIT\ProjectGroup5\Repositories\bin\Debug\net8.0\Repositories.deps.json
+D:\GIT\ProjectGroup5\Repositories\bin\Debug\net8.0\Repositories.dll
+D:\GIT\ProjectGroup5\Repositories\bin\Debug\net8.0\Repositories.pdb
+D:\GIT\ProjectGroup5\Repositories\obj\Debug\net8.0\Repositories.GeneratedMSBuildEditorConfig.editorconfig
+D:\GIT\ProjectGroup5\Repositories\obj\Debug\net8.0\Repositories.AssemblyInfoInputs.cache
+D:\GIT\ProjectGroup5\Repositories\obj\Debug\net8.0\Repositories.AssemblyInfo.cs
+D:\GIT\ProjectGroup5\Repositories\obj\Debug\net8.0\Repositories.csproj.CoreCompileInputs.cache
+D:\GIT\ProjectGroup5\Repositories\obj\Debug\net8.0\Repositories.sourcelink.json
+D:\GIT\ProjectGroup5\Repositories\obj\Debug\net8.0\Repositories.dll
+D:\GIT\ProjectGroup5\Repositories\obj\Debug\net8.0\refint\Repositories.dll
+D:\GIT\ProjectGroup5\Repositories\obj\Debug\net8.0\Repositories.pdb
+D:\GIT\ProjectGroup5\Repositories\obj\Debug\net8.0\ref\Repositories.dll

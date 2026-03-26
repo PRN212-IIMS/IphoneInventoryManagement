@@ -9,3 +9,15 @@ D:\PRN212_MYSELF\OOP\IphoneInventoryManagement\Services\obj\Debug\net8.0\Service
 D:\PRN212_MYSELF\OOP\IphoneInventoryManagement\Services\obj\Debug\net8.0\refint\Services.dll
 D:\PRN212_MYSELF\OOP\IphoneInventoryManagement\Services\obj\Debug\net8.0\Services.pdb
 D:\PRN212_MYSELF\OOP\IphoneInventoryManagement\Services\obj\Debug\net8.0\ref\Services.dll
+D:\GIT\ProjectGroup5\Services\bin\Debug\net8.0\Services.deps.json
+D:\GIT\ProjectGroup5\Services\bin\Debug\net8.0\Services.dll
+D:\GIT\ProjectGroup5\Services\bin\Debug\net8.0\Services.pdb
+D:\GIT\ProjectGroup5\Services\obj\Debug\net8.0\Services.GeneratedMSBuildEditorConfig.editorconfig
+D:\GIT\ProjectGroup5\Services\obj\Debug\net8.0\Services.AssemblyInfoInputs.cache
+D:\GIT\ProjectGroup5\Services\obj\Debug\net8.0\Services.AssemblyInfo.cs
+D:\GIT\ProjectGroup5\Services\obj\Debug\net8.0\Services.csproj.CoreCompileInputs.cache
+D:\GIT\ProjectGroup5\Services\obj\Debug\net8.0\Services.sourcelink.json
+D:\GIT\ProjectGroup5\Services\obj\Debug\net8.0\Services.dll
+D:\GIT\ProjectGroup5\Services\obj\Debug\net8.0\refint\Services.dll
+D:\GIT\ProjectGroup5\Services\obj\Debug\net8.0\Services.pdb
+D:\GIT\ProjectGroup5\Services\obj\Debug\net8.0\ref\Services.dll
