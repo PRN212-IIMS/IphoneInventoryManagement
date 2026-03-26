@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
-namespace DataAccessLayer.Models;
+namespace DataAccessLayer;
 
 public partial class IPhoneInventoryDbContext : DbContext
 {
