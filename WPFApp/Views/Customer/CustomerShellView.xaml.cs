@@ -4,6 +4,8 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Media;
+using Services.Implementations;
+using Services.Interfaces;
 using Services.Models;
 using WPFApp.Views.Shared;
 
@@ -12,6 +14,7 @@ namespace WPFApp.Views.Customer;
 public partial class CustomerShellView : UserControl
 {
     private readonly Action _logout;
+    private readonly IProfileService _profileService = new ProfileService();
     private readonly AuthenticatedUser _user;
     private ContentControl _contentHost = null!;
 
@@ -47,8 +50,8 @@ public partial class CustomerShellView : UserControl
         Grid.SetColumn(nav, 1);
         topGrid.Children.Add(nav);
 
-        var accountButton = UiFactory.CreateCustomerAccountButton(user.FullName);
-        var accountPopup = CreateCustomerPopup(user);
+        var accountButton = UiFactory.CreateCustomerAccountButton(_user.FullName);
+        var accountPopup = CreateCustomerPopup(_user);
         accountPopup.PlacementTarget = accountButton;
         accountPopup.Placement = PlacementMode.Bottom;
         accountPopup.VerticalOffset = 10;
@@ -90,7 +93,7 @@ public partial class CustomerShellView : UserControl
         var host = new Grid { Margin = new Thickness(34, 34, 34, 28) };
         var card = ProfileViewFactory.CreateProfileCard(
             _user,
-            () => MessageBox.Show("Edit profile is not connected yet."),
+            () => ShowEditProfile(),
             () => MessageBox.Show("Change password is not connected yet."),
             UiFactory.Brush("#DDF8FF"),
             UiFactory.Brush("#0B7BAA"));
@@ -102,6 +105,64 @@ public partial class CustomerShellView : UserControl
 
         scroll.Content = host;
         _contentHost.Content = scroll;
+    }
+
+    private void ShowEditProfile(string? message = null, bool isError = false)
+    {
+        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        var host = new Grid { Margin = new Thickness(34, 34, 34, 28) };
+        var card = ProfileViewFactory.CreateEditProfileCard(
+            _user,
+            ShowProfile,
+            SaveProfile,
+            message,
+            isError);
+        card.Width = 1120;
+        card.MaxWidth = 1120;
+        card.HorizontalAlignment = HorizontalAlignment.Center;
+        card.VerticalAlignment = VerticalAlignment.Top;
+        host.Children.Add(card);
+        scroll.Content = host;
+        _contentHost.Content = scroll;
+    }
+
+    private void SaveProfile(string fullName, string phone)
+    {
+        var result = _profileService.UpdateProfile(new UpdateProfileRequest
+        {
+            UserId = _user.UserId,
+            Role = _user.Role,
+            FullName = fullName,
+            Phone = phone
+        });
+
+        if (!result.Success)
+        {
+            ShowEditProfile(result.Message, true);
+            return;
+        }
+
+        if (result.UpdatedUser is not null)
+        {
+            ApplyUpdatedUser(result.UpdatedUser);
+        }
+
+        ReloadLayout(ShowProfile);
+    }
+
+    private void ApplyUpdatedUser(AuthenticatedUser updatedUser)
+    {
+        _user.FullName = updatedUser.FullName;
+        _user.Phone = updatedUser.Phone;
+        _user.Status = updatedUser.Status;
+        _user.Email = updatedUser.Email;
+    }
+
+    private void ReloadLayout(Action nextView)
+    {
+        RootHost.Children.Clear();
+        BuildLayout(_user);
+        nextView();
     }
 
     private Border CreateHero()

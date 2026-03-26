@@ -4,6 +4,8 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Media;
+using Services.Implementations;
+using Services.Interfaces;
 using Services.Models;
 using WPFApp.Views.Shared;
 
@@ -12,6 +14,7 @@ namespace WPFApp.Views.Staff;
 public partial class StaffShellView : UserControl
 {
     private readonly Action _logout;
+    private readonly IProfileService _profileService = new ProfileService();
     private readonly AuthenticatedUser _user;
     private ContentControl _contentHost = null!;
 
@@ -51,7 +54,7 @@ public partial class StaffShellView : UserControl
 
         var accountHost = new Grid { Margin = new Thickness(14, 0, 14, 18) };
         var avatar = string.IsNullOrWhiteSpace(user.FullName) ? "S" : user.FullName.Trim()[0].ToString().ToUpperInvariant();
-        var accountButton = UiFactory.CreateAccountButton(user.FullName, user.Role, avatar);
+        var accountButton = UiFactory.CreateAccountButton(_user.FullName, _user.Role, avatar);
         var popup = CreateAccountPopup();
         popup.PlacementTarget = accountButton;
         popup.Placement = PlacementMode.Top;
@@ -94,12 +97,64 @@ public partial class StaffShellView : UserControl
         var host = new Grid { Margin = new Thickness(26, 22, 26, 22) };
         var card = ProfileViewFactory.CreateProfileCard(
             _user,
-            () => MessageBox.Show("Edit profile is not connected yet."),
+            () => ShowEditProfile(),
             () => MessageBox.Show("Change password is not connected yet."),
             UiFactory.Brush("#ECF3FF"),
             UiFactory.Brush("#4E73C7"));
         host.Children.Add(card);
         _contentHost.Content = host;
+    }
+
+    private void ShowEditProfile(string? message = null, bool isError = false)
+    {
+        var host = new Grid { Margin = new Thickness(26, 22, 26, 22) };
+        var card = ProfileViewFactory.CreateEditProfileCard(
+            _user,
+            ShowProfile,
+            SaveProfile,
+            message,
+            isError);
+        host.Children.Add(card);
+        _contentHost.Content = host;
+    }
+
+    private void SaveProfile(string fullName, string phone)
+    {
+        var result = _profileService.UpdateProfile(new UpdateProfileRequest
+        {
+            UserId = _user.UserId,
+            Role = _user.Role,
+            FullName = fullName,
+            Phone = phone
+        });
+
+        if (!result.Success)
+        {
+            ShowEditProfile(result.Message, true);
+            return;
+        }
+
+        if (result.UpdatedUser is not null)
+        {
+            ApplyUpdatedUser(result.UpdatedUser);
+        }
+
+        ReloadLayout(ShowProfile);
+    }
+
+    private void ApplyUpdatedUser(AuthenticatedUser updatedUser)
+    {
+        _user.FullName = updatedUser.FullName;
+        _user.Phone = updatedUser.Phone;
+        _user.Status = updatedUser.Status;
+        _user.Email = updatedUser.Email;
+    }
+
+    private void ReloadLayout(Action nextView)
+    {
+        RootHost.Children.Clear();
+        BuildLayout(_user);
+        nextView();
     }
 
     private Popup CreateAccountPopup()
@@ -130,3 +185,4 @@ public partial class StaffShellView : UserControl
         return button;
     }
 }
+
