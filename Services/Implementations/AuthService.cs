@@ -30,9 +30,11 @@ public class AuthService : IAuthService
         {
             return new AuthenticatedUser
             {
+                UserId = admin.AdminId,
                 Role = "Admin",
                 FullName = admin.FullName,
-                Email = admin.Email
+                Email = admin.Email,
+                Status = admin.Status
             };
         }
 
@@ -45,7 +47,8 @@ public class AuthService : IAuthService
             {
                 Role = "Admin",
                 FullName = "System Admin",
-                Email = normalizedEmail
+                Email = normalizedEmail,
+                Status = "Active"
             };
         }
 
@@ -54,9 +57,12 @@ public class AuthService : IAuthService
         {
             return new AuthenticatedUser
             {
+                UserId = staff.StaffId,
                 Role = "Staff",
                 FullName = staff.FullName,
-                Email = staff.Email
+                Email = staff.Email,
+                Phone = staff.Phone ?? string.Empty,
+                Status = staff.Status
             };
         }
 
@@ -65,9 +71,12 @@ public class AuthService : IAuthService
         {
             return new AuthenticatedUser
             {
+                UserId = customer.CustomerId,
                 Role = "Customer",
                 FullName = customer.FullName,
-                Email = customer.Email
+                Email = customer.Email,
+                Phone = customer.Phone ?? string.Empty,
+                Status = customer.Status
             };
         }
 
