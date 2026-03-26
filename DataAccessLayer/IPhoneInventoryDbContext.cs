@@ -5,6 +5,10 @@ using System;
 using System.Collections.Generic;
 namespace DataAccessLayer;
 
+using System;
+using System.IO;
+using Microsoft.Extensions.Configuration;
+
 public partial class IPhoneInventoryDbContext : DbContext
 {
     public IPhoneInventoryDbContext()
@@ -42,6 +46,7 @@ public partial class IPhoneInventoryDbContext : DbContext
         var connectionString = configuration.GetConnectionString("DBDefault");
         optionsBuilder.UseSqlServer(connectionString);
     }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
