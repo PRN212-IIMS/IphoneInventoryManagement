@@ -1,3 +1,11 @@
+bin/
+obj/
 .vs/
-**/bin/
-**/obj/
+*.user
+*.suo
+*.cache
+*.pdb
+*.dll
+*.exe
+*.log
+TestResults/
