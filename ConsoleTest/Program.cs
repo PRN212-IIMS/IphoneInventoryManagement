@@ -1,7 +1,7 @@
-﻿using BusinessObjects;
+using BusinessObjects;
 using DataAccessLayer;
 
-namespace Test
+namespace ConsoleTest
 {
     internal class Program
     {

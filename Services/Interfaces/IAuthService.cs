@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Services.Models;
 
 namespace Services.Interfaces
 {
     public interface IAuthService
     {
-        object? Login(string email, string password);
+        AuthenticatedUser? Login(string email, string password);
+        RegisterCustomerResult RegisterCustomer(RegisterCustomerRequest request);
     }
 }
