@@ -1,26 +1,48 @@
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using WPFApp.ViewModels;
+using Services.Implementations;
+using Services.Interfaces;
+using Services.Models;
+using WPFApp.Views.Admin;
+using WPFApp.Views.Auth;
+using WPFApp.Views.Customer;
+using WPFApp.Views.Staff;
 
-namespace WPFApp.Views
+namespace WPFApp.Views;
+
+public partial class MainWindow : Window
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
-    public partial class MainWindow : Window
+    private readonly IAuthService _authService = new AuthService();
+
+    public MainWindow()
     {
-        public MainWindow()
+        InitializeComponent();
+        ShowLogin();
+    }
+
+    private void ShowLogin()
+    {
+        RootHost.Children.Clear();
+        RootHost.Children.Add(new LoginView(
+            (email, password) => _authService.Login(email, password),
+            request => _authService.RegisterCustomer(request),
+            HandleAuthenticated));
+    }
+
+    private void HandleAuthenticated(AuthenticatedUser user)
+    {
+        RootHost.Children.Clear();
+
+        switch (user.Role)
         {
-            InitializeComponent();
-            DataContext = new MainViewModel();
+            case "Admin":
+                RootHost.Children.Add(new AdminShellView(user, ShowLogin));
+                break;
+            case "Staff":
+                RootHost.Children.Add(new StaffShellView(user, ShowLogin));
+                break;
+            default:
+                RootHost.Children.Add(new CustomerShellView(user, ShowLogin));
+                break;
         }
     }
 }
