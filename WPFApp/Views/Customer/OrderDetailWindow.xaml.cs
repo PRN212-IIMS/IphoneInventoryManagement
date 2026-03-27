@@ -1,7 +1,6 @@
-﻿using BusinessObjects;
+﻿using System.Windows;
+using BusinessObjects;
 using Services.Implementations;
-using System.Windows;
-using System.Windows.Controls;
 
 namespace WPFApp.Views.Customer
 {

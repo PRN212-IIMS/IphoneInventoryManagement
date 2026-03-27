@@ -1,21 +1,25 @@
-﻿using BusinessObjects;
-using Services.Implementations;
+﻿using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using BusinessObjects;
+using Services.Implementations;
 
 namespace WPFApp.Views.Customer
 {
-    public partial class CreateOrderWindow : Window
+    public partial class CreateOrderView : UserControl
     {
         private readonly OrderService _orderService;
         private readonly int _customerId;
+        private readonly Action _openOrders;
 
-        public CreateOrderWindow(int customerId)
+        public CreateOrderView(int customerId, Action openOrders)
         {
             InitializeComponent();
             _orderService = new OrderService();
             _customerId = customerId;
+            _openOrders = openOrders;
 
             LoadCart();
         }
@@ -27,6 +31,64 @@ namespace WPFApp.Views.Customer
 
             txtSummaryCount.Text = $"Items: {CartStore.Items.Sum(x => x.Quantity)}";
             txtSummaryTotal.Text = $"Total Amount: {CartStore.GetTotalAmount():N0}";
+        }
+
+        private bool ValidateShippingInfo()
+        {
+            string receiverName = txtReceiverName.Text.Trim();
+            string receiverPhone = txtReceiverPhone.Text.Trim();
+            string shippingAddress = txtShippingAddress.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(receiverName))
+            {
+                MessageBox.Show("Receiver name must not be empty.");
+                txtReceiverName.Focus();
+                return false;
+            }
+
+            if (receiverName.Length < 2)
+            {
+                MessageBox.Show("Receiver name must be at least 2 characters.");
+                txtReceiverName.Focus();
+                return false;
+            }
+
+            if (!Regex.IsMatch(receiverName, @"^[\p{L}\s]+$"))
+            {
+                MessageBox.Show("Receiver name must contain letters only.");
+                txtReceiverName.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(receiverPhone))
+            {
+                MessageBox.Show("Receiver phone must not be empty.");
+                txtReceiverPhone.Focus();
+                return false;
+            }
+
+            if (!Regex.IsMatch(receiverPhone, @"^0\d{9,10}$"))
+            {
+                MessageBox.Show("Receiver phone must start with 0 and contain 10 to 11 digits.");
+                txtReceiverPhone.Focus();
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(shippingAddress))
+            {
+                MessageBox.Show("Shipping address must not be empty.");
+                txtShippingAddress.Focus();
+                return false;
+            }
+
+            if (shippingAddress.Length < 5)
+            {
+                MessageBox.Show("Shipping address must be at least 5 characters.");
+                txtShippingAddress.Focus();
+                return false;
+            }
+
+            return true;
         }
 
         private void RemoveSelected_Click(object sender, RoutedEventArgs e)
@@ -86,74 +148,13 @@ namespace WPFApp.Views.Customer
                 txtReceiverName.Clear();
                 txtReceiverPhone.Clear();
                 txtShippingAddress.Clear();
+
+                _openOrders?.Invoke();
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
-        }
-
-        private void ViewOrders_Click(object sender, RoutedEventArgs e)
-        {
-            OrderHistoryWindow window = new OrderHistoryWindow(_customerId);
-            window.ShowDialog();
-        }
-        private bool ValidateShippingInfo()
-        {
-            string receiverName = txtReceiverName.Text.Trim();
-            string receiverPhone = txtReceiverPhone.Text.Trim();
-            string shippingAddress = txtShippingAddress.Text.Trim();
-
-            if (string.IsNullOrWhiteSpace(receiverName))
-            {
-                MessageBox.Show("Receiver name must not be empty.");
-                txtReceiverName.Focus();
-                return false;
-            }
-
-            if (receiverName.Length < 2)
-            {
-                MessageBox.Show("Receiver name must be at least 2 characters.");
-                txtReceiverName.Focus();
-                return false;
-            }
-
-            if (!System.Text.RegularExpressions.Regex.IsMatch(receiverName, @"^[\p{L}\s]+$"))
-            {
-                MessageBox.Show("Receiver name must contain letters only.");
-                txtReceiverName.Focus();
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(receiverPhone))
-            {
-                MessageBox.Show("Receiver phone must not be empty.");
-                txtReceiverPhone.Focus();
-                return false;
-            }
-
-            if (!System.Text.RegularExpressions.Regex.IsMatch(receiverPhone, @"^0\d{9,10}$"))
-            {
-                MessageBox.Show("Receiver phone must start with 0 and contain 10 to 11 digits.");
-                txtReceiverPhone.Focus();
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(shippingAddress))
-            {
-                MessageBox.Show("Shipping address must not be empty.");
-                txtShippingAddress.Focus();
-                return false;
-            }
-
-            if (shippingAddress.Length < 5)
-            {
-                MessageBox.Show("Shipping address must be at least 5 characters.");
-                txtShippingAddress.Focus();
-                return false;
-            }
-
-            return true;
         }
     }
 }

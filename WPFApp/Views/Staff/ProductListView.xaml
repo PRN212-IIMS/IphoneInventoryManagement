@@ -115,7 +115,17 @@
                     <DataGridTextColumn Header="Storage"
                                         Binding="{Binding StorageCapacity}"
                                         Width="110"/>
-
+                    <DataGridTemplateColumn Header="UrlImage" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding UrlImages}"
+                       TextTrimming="CharacterEllipsis"
+                       TextWrapping="NoWrap"
+                       ToolTip="{Binding UrlImages}"
+                       VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTextColumn Header="Price"
                                         Binding="{Binding Price, StringFormat={}{0:N0}}"
                                         Width="120"/>
