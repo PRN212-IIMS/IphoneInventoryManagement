@@ -20,7 +20,7 @@ namespace WPFApp.Views.Staff
         private readonly int _staffId;
 
         private readonly List<OrderCreateItemViewModel> _detailItems = new();
-
+        
         public CreateOrderWindow(int staffId)
         {
             InitializeComponent();
@@ -41,6 +41,7 @@ namespace WPFApp.Views.Staff
             cbCustomers.DisplayMemberPath = "FullName";
             cbCustomers.SelectedValuePath = "CustomerId";
             cbCustomers.SelectedIndex = -1;
+            ///
         }
 
         private void LoadProducts()
