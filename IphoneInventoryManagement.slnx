@@ -3,5 +3,6 @@
   <Project Path="DataAccessLayer/DataAccessLayer.csproj" />
   <Project Path="Repositories/Repositories.csproj" />
   <Project Path="Services/Services.csproj" />
+  <Project Path="UnitTest/UnitTest.csproj" Id="c0a63a97-4361-44c3-9eb7-7d9a2f04402f" />
   <Project Path="WPFApp/WPFApp.csproj" />
 </Solution>

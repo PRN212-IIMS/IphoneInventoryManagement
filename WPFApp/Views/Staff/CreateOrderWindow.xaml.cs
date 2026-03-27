@@ -5,6 +5,7 @@ using Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using WPFApp.ViewModels;
@@ -14,13 +15,19 @@ namespace WPFApp.Views.Staff
 {
     public partial class CreateOrderWindow : Window
     {
+        private const int MaxLineQuantity = 20;
+        private const int MinReceiverNameLength = 2;
+        private const int MaxReceiverNameLength = 100;
+        private const int MinShippingAddressLength = 10;
+        private const int MaxShippingAddressLength = 255;
+
         private readonly IOrderService _orderService;
         private readonly ICustomerService _customerService;
         private readonly IProductService _productService;
         private readonly int _staffId;
 
         private readonly List<OrderCreateItemViewModel> _detailItems = new();
-        
+
         public CreateOrderWindow(int staffId)
         {
             InitializeComponent();
@@ -72,14 +79,20 @@ namespace WPFApp.Views.Staff
             {
                 if (cbProducts.SelectedItem is not Product selectedProduct)
                 {
-                    MessageBox.Show("Vui lòng chọn sản phẩm.", "Validation",
+                    MessageBox.Show("Please select a product.", "Validation",
                         MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
                 if (!int.TryParse(txtQuantity.Text.Trim(), out int quantity) || quantity <= 0)
                 {
-                    MessageBox.Show("Quantity phải là số nguyên > 0.", "Validation",
+                    MessageBox.Show("Quantity must be an integer greater than 0.", "Validation",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (quantity > MaxLineQuantity)
+                {
+                    MessageBox.Show($"Each product line cannot exceed {MaxLineQuantity} units per order.", "Validation",
                         MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
@@ -87,7 +100,7 @@ namespace WPFApp.Views.Staff
                 if (selectedProduct.StockQuantity < quantity)
                 {
                     MessageBox.Show(
-                        $"Sản phẩm '{selectedProduct.ProductName}' không đủ số lượng trong kho.",
+                        $"Insufficient stock for product '{selectedProduct.ProductName}'.",
                         "Validation",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
@@ -100,7 +113,7 @@ namespace WPFApp.Views.Staff
                     if (selectedProduct.StockQuantity < existing.Quantity + quantity)
                     {
                         MessageBox.Show(
-                            $"Sản phẩm '{selectedProduct.ProductName}' không đủ số lượng trong kho.",
+                            $"Insufficient stock for product '{selectedProduct.ProductName}'.",
                             "Validation",
                             MessageBoxButton.OK,
                             MessageBoxImage.Warning);
@@ -108,6 +121,13 @@ namespace WPFApp.Views.Staff
                     }
 
                     existing.Quantity += quantity;
+                    if (existing.Quantity > MaxLineQuantity)
+                    {
+                        existing.Quantity -= quantity;
+                        MessageBox.Show($"Total quantity per product cannot exceed {MaxLineQuantity}.", "Validation",
+                            MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
                 }
                 else
                 {
@@ -148,20 +168,31 @@ namespace WPFApp.Views.Staff
             {
                 if (_detailItems.Count == 0)
                 {
-                    MessageBox.Show("Đơn hàng phải có ít nhất 1 sản phẩm.", "Validation",
+                    MessageBox.Show("The order must contain at least one product.", "Validation",
                         MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
                 CustomerEntity? selectedCustomer = cbCustomers.SelectedItem as CustomerEntity;
+                string receiverName = txtReceiverName.Text.Trim();
+                string receiverPhone = NormalizePhone(txtReceiverPhone.Text);
+                string shippingAddress = txtShippingAddress.Text.Trim();
+
+                string? validationMessage = ValidateOrderForm(receiverName, receiverPhone, shippingAddress);
+                if (!string.IsNullOrWhiteSpace(validationMessage))
+                {
+                    MessageBox.Show(validationMessage, "Validation",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
                 var order = new Order
                 {
                     CustomerId = selectedCustomer?.CustomerId,
                     StaffId = _staffId,
-                    ReceiverName = txtReceiverName.Text.Trim(),
-                    ReceiverPhone = txtReceiverPhone.Text.Trim(),
-                    ShippingAddress = txtShippingAddress.Text.Trim()
+                    ReceiverName = receiverName,
+                    ReceiverPhone = receiverPhone,
+                    ShippingAddress = shippingAddress
                 };
 
                 var details = _detailItems.Select(x => new OrderDetail
@@ -172,7 +203,7 @@ namespace WPFApp.Views.Staff
 
                 _orderService.CreateOrder(order, details);
 
-                MessageBox.Show("Tạo đơn hàng thành công.", "Success",
+                MessageBox.Show("Order created successfully.", "Success",
                     MessageBoxButton.OK, MessageBoxImage.Information);
                 DialogResult = true;
                 Close();
@@ -192,6 +223,8 @@ namespace WPFApp.Views.Staff
 
         private void cbCustomers_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (cbCustomers.SelectedItem == null)
+                return;
             if (cbCustomers.SelectedItem is CustomerEntity selectedCustomer)
             {
                 txtReceiverName.Text = selectedCustomer.FullName ?? "";
@@ -202,6 +235,45 @@ namespace WPFApp.Views.Staff
                 txtReceiverName.Clear();
                 txtReceiverPhone.Clear();
             }
+        }
+        private void btnClearCustomer_Click(object sender, RoutedEventArgs e)
+        {
+            cbCustomers.SelectedIndex = -1;
+            txtReceiverName.Text = "";
+            txtReceiverPhone.Text = "";
+            txtShippingAddress.Text = "";
+            cbCustomers.Focus();
+        }
+
+        private static string? ValidateOrderForm(string receiverName, string receiverPhone, string shippingAddress)
+        {
+            if (string.IsNullOrWhiteSpace(receiverName))
+                return "Receiver name cannot be empty.";
+
+            if (receiverName.Length < MinReceiverNameLength || receiverName.Length > MaxReceiverNameLength)
+                return $"Receiver name must be between {MinReceiverNameLength} and {MaxReceiverNameLength} characters.";
+
+            if (!Regex.IsMatch(receiverName, @"^[\p{L}\s'\.\-]+$"))
+                return "Receiver name contains invalid characters.";
+
+            if (string.IsNullOrWhiteSpace(receiverPhone))
+                return "Receiver phone cannot be empty.";
+
+            if (!Regex.IsMatch(receiverPhone, @"^(0\d{9}|\+84\d{9})$"))
+                return "Receiver phone number is invalid.";
+
+            if (string.IsNullOrWhiteSpace(shippingAddress))
+                return "Shipping address cannot be empty.";
+
+            if (shippingAddress.Length < MinShippingAddressLength || shippingAddress.Length > MaxShippingAddressLength)
+                return $"Shipping address must be between {MinShippingAddressLength} and {MaxShippingAddressLength} characters.";
+
+            return null;
+        }
+
+        private static string NormalizePhone(string phone)
+        {
+            return (phone ?? string.Empty).Trim().Replace(" ", string.Empty).Replace(".", string.Empty);
         }
     }
 }
