@@ -18,69 +18,123 @@ public class AuthService : IAuthService
 {
     private readonly ICustomerRepository _customerRepository = new CustomerRepository();
 
-    public AuthenticatedUser? Login(string email, string password)
+    public LoginResult Login(string email, string password)
     {
         var normalizedEmail = email.Trim().ToLowerInvariant();
         var normalizedPassword = password.Trim();
 
+        if (string.IsNullOrWhiteSpace(normalizedEmail) || string.IsNullOrWhiteSpace(normalizedPassword))
+        {
+            return new LoginResult { Success = false, Message = "Please enter both email and password." };
+        }
+
         using var context = new IPhoneInventoryDbContext();
 
-        var admin = context.Admins.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail && x.Status == "Active");
-        if (admin is not null && IsValidHashedPassword(admin.Password, normalizedPassword))
+        var adminAnyStatus = context.Admins.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail);
+        if (adminAnyStatus is not null)
         {
-            return new AuthenticatedUser
+            if (!string.Equals(adminAnyStatus.Status, "Active", StringComparison.OrdinalIgnoreCase))
             {
-                UserId = admin.AdminId,
-                Role = "Admin",
-                FullName = admin.FullName,
-                Email = admin.Email,
-                Status = admin.Status
+                return new LoginResult { Success = false, Message = "This admin account is inactive." };
+            }
+
+            if (!IsValidHashedPassword(adminAnyStatus.Password, normalizedPassword))
+            {
+                return new LoginResult { Success = false, Message = "Incorrect password." };
+            }
+
+            return new LoginResult
+            {
+                Success = true,
+                User = new AuthenticatedUser
+                {
+                    UserId = adminAnyStatus.AdminId,
+                    Role = "Admin",
+                    FullName = adminAnyStatus.FullName,
+                    Email = adminAnyStatus.Email,
+                    Status = adminAnyStatus.Status
+                }
             };
         }
 
         var defaultAdmin = LoadDefaultAdmin();
-        if (defaultAdmin is not null
-            && string.Equals(defaultAdmin.Email, normalizedEmail, StringComparison.OrdinalIgnoreCase)
-            && defaultAdmin.Password == normalizedPassword)
+        if (defaultAdmin is not null && string.Equals(defaultAdmin.Email, normalizedEmail, StringComparison.OrdinalIgnoreCase))
         {
-            return new AuthenticatedUser
+            if (defaultAdmin.Password != normalizedPassword)
             {
-                Role = "Admin",
-                FullName = "System Admin",
-                Email = normalizedEmail,
-                Status = "Active"
+                return new LoginResult { Success = false, Message = "Incorrect password." };
+            }
+
+            return new LoginResult
+            {
+                Success = true,
+                User = new AuthenticatedUser
+                {
+                    Role = "Admin",
+                    FullName = "System Admin",
+                    Email = normalizedEmail,
+                    Status = "Active"
+                }
             };
         }
 
-        var staff = context.Staff.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail && x.Status == "Active");
-        if (staff is not null && IsValidHashedPassword(staff.Password, normalizedPassword))
+        var staffAnyStatus = context.Staff.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail);
+        if (staffAnyStatus is not null)
         {
-            return new AuthenticatedUser
+            if (!string.Equals(staffAnyStatus.Status, "Active", StringComparison.OrdinalIgnoreCase))
             {
-                UserId = staff.StaffId,
-                Role = "Staff",
-                FullName = staff.FullName,
-                Email = staff.Email,
-                Phone = staff.Phone ?? string.Empty,
-                Status = staff.Status
+                return new LoginResult { Success = false, Message = "This staff account is inactive." };
+            }
+
+            if (!IsValidHashedPassword(staffAnyStatus.Password, normalizedPassword))
+            {
+                return new LoginResult { Success = false, Message = "Incorrect password." };
+            }
+
+            return new LoginResult
+            {
+                Success = true,
+                User = new AuthenticatedUser
+                {
+                    UserId = staffAnyStatus.StaffId,
+                    Role = "Staff",
+                    FullName = staffAnyStatus.FullName,
+                    Email = staffAnyStatus.Email,
+                    Phone = staffAnyStatus.Phone ?? string.Empty,
+                    Status = staffAnyStatus.Status
+                }
             };
         }
 
-        var customer = context.Customers.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail && x.Status == "Active");
-        if (customer is not null && IsValidHashedPassword(customer.Password, normalizedPassword))
+        var customerAnyStatus = context.Customers.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail);
+        if (customerAnyStatus is not null)
         {
-            return new AuthenticatedUser
+            if (!string.Equals(customerAnyStatus.Status, "Active", StringComparison.OrdinalIgnoreCase))
             {
-                UserId = customer.CustomerId,
-                Role = "Customer",
-                FullName = customer.FullName,
-                Email = customer.Email,
-                Phone = customer.Phone ?? string.Empty,
-                Status = customer.Status
+                return new LoginResult { Success = false, Message = "This customer account is inactive." };
+            }
+
+            if (!IsValidHashedPassword(customerAnyStatus.Password, normalizedPassword))
+            {
+                return new LoginResult { Success = false, Message = "Incorrect password." };
+            }
+
+            return new LoginResult
+            {
+                Success = true,
+                User = new AuthenticatedUser
+                {
+                    UserId = customerAnyStatus.CustomerId,
+                    Role = "Customer",
+                    FullName = customerAnyStatus.FullName,
+                    Email = customerAnyStatus.Email,
+                    Phone = customerAnyStatus.Phone ?? string.Empty,
+                    Status = customerAnyStatus.Status
+                }
             };
         }
 
-        return null;
+        return new LoginResult { Success = false, Message = "No account was found for that email address." };
     }
 
     public RegisterCustomerResult RegisterCustomer(RegisterCustomerRequest request)
@@ -112,12 +166,12 @@ public class AuthService : IAuthService
 
         if (!IsValidPhone(phone))
         {
-            return new RegisterCustomerResult { Success = false, Message = "Phone number must be 10 digits and start with 0." };
+            return new RegisterCustomerResult { Success = false, Message = "Phone number must be exactly 10 digits and start with 0." };
         }
 
         if (!IsValidPassword(password))
         {
-            return new RegisterCustomerResult { Success = false, Message = "Password must contain at least 1 uppercase letter, 1 number, 1 special character, and no spaces." };
+            return new RegisterCustomerResult { Success = false, Message = "Password must contain at least 8 characters, 1 uppercase letter, 1 number, 1 special character, and no spaces." };
         }
 
         if (password != confirmPassword)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using BusinessObjects;
 using Services.Implementations;
@@ -50,13 +50,13 @@ namespace WPFApp.Views.Staff
             {
                 if (!decimal.TryParse(txtPrice.Text.Trim(), out decimal price))
                 {
-                    MessageBox.Show("Price phải là số hợp lệ.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Price must be a valid number.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
                 if (!int.TryParse(txtStockQuantity.Text.Trim(), out int stockQuantity))
                 {
-                    MessageBox.Show("Stock Quantity phải là số nguyên hợp lệ.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Stock Quantity must be a valid integer.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -76,17 +76,15 @@ namespace WPFApp.Views.Staff
                 if (_editingProduct == null)
                 {
                     _productService.CreateProduct(product);
-                    MessageBox.Show("Thêm sản phẩm thành công.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Product created successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
                     product.ProductId = _editingProduct.ProductId;
-
-                    // Giữ StaffId cũ của sản phẩm
                     product.StaffId = _editingProduct.StaffId;
 
                     _productService.UpdateProduct(product);
-                    MessageBox.Show("Cập nhật sản phẩm thành công.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                    MessageBox.Show("Product updated successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
 
                 DialogResult = true;

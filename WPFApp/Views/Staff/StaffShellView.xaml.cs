@@ -1,11 +1,9 @@
 using System;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Media;
-using BusinessObjects;
 using Services.Implementations;
 using Services.Interfaces;
 using Services.Models;
@@ -17,15 +15,8 @@ public partial class StaffShellView : UserControl
 {
     private readonly Action _logout;
     private readonly IProfileService _profileService = new ProfileService();
-    private readonly IProductService _productService = new ProductService();
-    private readonly IStockInService _stockInService = new StockInService();
     private readonly AuthenticatedUser _user;
     private ContentControl _contentHost = null!;
-    private Button _menuStockIn = null!;
-    private Button _menuProducts = null!;
-    private TextBlock _breadcrumb = null!;
-    private TextBlock _title = null!;
-    private TextBlock _subtitle = null!;
 
     public StaffShellView(AuthenticatedUser user, Action logout)
     {
@@ -80,14 +71,17 @@ public partial class StaffShellView : UserControl
         var btnStockProduct = UiFactory.CreateSidebarMenuButton("\uE7C3", "Stock Product", false);
         var btnProductList = UiFactory.CreateSidebarMenuButton("\uE8EF", "Product List", false);
         var btnOrderList = UiFactory.CreateSidebarMenuButton("\uE8D2", "Order List", false);
+        var btnAiAssistant = UiFactory.CreateSidebarMenuButton("\uE721", "AI Assistant", false);
 
         menuStack.Children.Add(btnStockProduct);
         menuStack.Children.Add(btnProductList);
         menuStack.Children.Add(btnOrderList);
+        menuStack.Children.Add(btnAiAssistant);
 
         btnStockProduct.Click += (_, _) => ShowStockInList();
         btnProductList.Click += (_, _) => ShowProductList();
         btnOrderList.Click += (_, _) => ShowOrderList();
+        btnAiAssistant.Click += (_, _) => ShowAiAssistant();
 
         Grid.SetRow(menuStack, 1);
         sidebar.Children.Add(menuStack);
@@ -140,46 +134,6 @@ public partial class StaffShellView : UserControl
         ShowProductList();
     }
 
-    private void ShowProductsScreen()
-    {
-        var body = new StackPanel { Margin = new Thickness(30, 26, 30, 26) };
-        body.Children.Add(new TextBlock
-        {
-            Text = "Staff Workspace",
-            FontFamily = UiFactory.Font("Bahnschrift SemiBold"),
-            FontSize = 36,
-            Foreground = UiFactory.Brush("#19345C")
-        });
-        body.Children.Add(new TextBlock
-        {
-            Margin = new Thickness(0, 12, 0, 0),
-            Text = "This workspace is ready for feature teams to plug stock, product, and order modules into the staff area.",
-            FontFamily = UiFactory.Font("Bahnschrift"),
-            FontSize = 18,
-            Foreground = UiFactory.Brush("#748CAF")
-        });
-        body.Children.Add(new Border
-        {
-            Margin = new Thickness(0, 30, 0, 0),
-            Height = 460,
-            Background = Brushes.White,
-            CornerRadius = new CornerRadius(18),
-            BorderBrush = UiFactory.Brush("#DFE8F2"),
-            BorderThickness = new Thickness(1),
-            Child = new TextBlock
-            {
-                Text = "Workspace ready for module implementation",
-                FontFamily = UiFactory.Font("Bahnschrift"),
-                FontSize = 26,
-                Foreground = UiFactory.Brush("#A5B5CB"),
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
-            }
-        });
-
-        _contentHost.Content = body;
-    }
-
     private void ShowProductList()
     {
         _contentHost.Content = new ProductListView(_user.UserId);
@@ -193,6 +147,11 @@ public partial class StaffShellView : UserControl
     private void ShowOrderList()
     {
         _contentHost.Content = new OrderListView(_user.UserId);
+    }
+
+    private void ShowAiAssistant()
+    {
+        _contentHost.Content = new StaffAiAssistantView();
     }
 
     private void ShowProfile()
