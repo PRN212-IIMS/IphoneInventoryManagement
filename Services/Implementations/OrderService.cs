@@ -55,10 +55,11 @@ namespace Services.Implementations
             if (order == null)
                 throw new ArgumentNullException(nameof(order));
 
-            // CustomerId optional: có thể null nếu là guest order
+            bool hasStaff = order.StaffId != null && order.StaffId > 0;
+            bool hasCustomer = order.CustomerId != null && order.CustomerId > 0;
 
-            if (order.StaffId == null || order.StaffId <= 0)
-                throw new Exception("Staff ID không hợp lệ.");
+            if (!hasStaff && !hasCustomer)
+                throw new Exception("Người tạo đơn không hợp lệ.");
 
             if (string.IsNullOrWhiteSpace(order.ReceiverName))
                 throw new Exception("Tên người nhận không được để trống.");
