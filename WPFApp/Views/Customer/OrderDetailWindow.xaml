@@ -43,12 +43,13 @@
         <Border Grid.Row="2" Background="White" CornerRadius="16" Padding="10" BorderBrush="#E2E8F0" BorderThickness="1">
             <DataGrid x:Name="dgOrderDetails"
                       AutoGenerateColumns="False"
-                      IsReadOnly="True">
+                      IsReadOnly="True"
+                      RowHeaderWidth="0">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Product" Binding="{Binding Product.ProductName}" Width="250"/>
                     <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" Width="90"/>
-                    <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice}" Width="120"/>
-                    <DataGridTextColumn Header="Line Total" Binding="{Binding LineTotal}" Width="120"/>
+                    <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, StringFormat=N0}" Width="120"/>
+                    <DataGridTextColumn Header="Line Total" Binding="{Binding LineTotal, StringFormat=N0}" Width="120"/>
                 </DataGrid.Columns>
             </DataGrid>
         </Border>

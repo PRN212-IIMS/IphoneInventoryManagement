@@ -1,9 +1,11 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Media;
+using BusinessObjects;
 using Services.Implementations;
 using Services.Interfaces;
 using Services.Models;
@@ -15,8 +17,15 @@ public partial class StaffShellView : UserControl
 {
     private readonly Action _logout;
     private readonly IProfileService _profileService = new ProfileService();
+    private readonly IProductService _productService = new ProductService();
+    private readonly IStockInService _stockInService = new StockInService();
     private readonly AuthenticatedUser _user;
     private ContentControl _contentHost = null!;
+    private Button _menuStockIn = null!;
+    private Button _menuProducts = null!;
+    private TextBlock _breadcrumb = null!;
+    private TextBlock _title = null!;
+    private TextBlock _subtitle = null!;
 
     public StaffShellView(AuthenticatedUser user, Action logout)
     {
@@ -101,7 +110,7 @@ public partial class StaffShellView : UserControl
         root.Children.Add(sidebar);
 
         var content = new Grid();
-        content.RowDefinitions.Add(new RowDefinition { Height = new GridLength(70) });
+        content.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         content.RowDefinitions.Add(new RowDefinition());
         Grid.SetColumn(content, 1);
 
@@ -122,7 +131,7 @@ public partial class StaffShellView : UserControl
         };
         content.Children.Add(topBar);
 
-        _contentHost = new ContentControl();
+        _contentHost = new ContentControl { Margin = new Thickness(28, 14, 28, 24) };
         Grid.SetRow(_contentHost, 1);
         content.Children.Add(_contentHost);
         root.Children.Add(content);
@@ -131,7 +140,7 @@ public partial class StaffShellView : UserControl
         ShowProductList();
     }
 
-    private void ShowWorkspace()
+    private void ShowProductsScreen()
     {
         var body = new StackPanel { Margin = new Thickness(30, 26, 30, 26) };
         body.Children.Add(new TextBlock
@@ -265,10 +274,15 @@ public partial class StaffShellView : UserControl
 
         if (result.UpdatedUser is not null)
         {
-            ApplyUpdatedUser(result.UpdatedUser);
+            _user.FullName = result.UpdatedUser.FullName;
+            _user.Phone = result.UpdatedUser.Phone;
+            _user.Status = result.UpdatedUser.Status;
+            _user.Email = result.UpdatedUser.Email;
         }
 
-        ReloadLayout(ShowProfile);
+        RootHost.Children.Clear();
+        BuildLayout(_user);
+        ShowProfile();
     }
 
     private void SavePassword(string currentPassword, string newPassword, string confirmNewPassword)
@@ -289,21 +303,6 @@ public partial class StaffShellView : UserControl
         }
 
         ShowChangePassword(result.Message, false);
-    }
-
-    private void ApplyUpdatedUser(AuthenticatedUser updatedUser)
-    {
-        _user.FullName = updatedUser.FullName;
-        _user.Phone = updatedUser.Phone;
-        _user.Status = updatedUser.Status;
-        _user.Email = updatedUser.Email;
-    }
-
-    private void ReloadLayout(Action nextView)
-    {
-        RootHost.Children.Clear();
-        BuildLayout(_user);
-        nextView();
     }
 
     private Popup CreateAccountPopup()

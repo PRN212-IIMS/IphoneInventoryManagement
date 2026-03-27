@@ -1,5 +1,263 @@
 <UserControl x:Class="WPFApp.Views.Customer.CustomerShellView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <Grid x:Name="RootHost" />
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="#F1F5F9">
+
+    <UserControl.Resources>
+
+        <Style x:Key="SidebarButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="62"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="#AEBBD3"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="18,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="18"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="MenuTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#AEBBD3"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- SIDEBAR -->
+        <Border Grid.Column="0" Background="#071B49">
+            <Grid Margin="18,22,18,18">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Logo + Brand -->
+                <StackPanel Grid.Row="0">
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="58"
+                                Height="58"
+                                CornerRadius="18"
+                                Background="#25B7E8">
+                            <TextBlock Text="🛒"
+                                       FontSize="24"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+
+                        <StackPanel Margin="16,4,0,0">
+                            <TextBlock Text="IIMS Customer"
+                                       Foreground="White"
+                                       FontSize="23"
+                                       FontWeight="Bold"/>
+                            <TextBlock Text="PORTAL MANAGEMENT"
+                                       Margin="0,10,0,0"
+                                       Foreground="#546B97"
+                                       FontSize="13"
+                                       FontWeight="Bold"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Menu -->
+                <StackPanel Grid.Row="2">
+                    <Button x:Name="btnBrowseProducts"
+                            Style="{StaticResource SidebarButtonStyle}"
+                            Click="BrowseProducts_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🛍"
+                                       Width="30"
+                                       FontSize="21"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock Text="Browse Products"
+                                       Margin="14,0,0,0"
+                                       Style="{StaticResource MenuTextStyle}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="btnCreateOrder"
+                            Style="{StaticResource SidebarButtonStyle}"
+                            Click="CreateOrder_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📄"
+                                       Width="30"
+                                       FontSize="21"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock Text="Create Order"
+                                       Margin="14,0,0,0"
+                                       Style="{StaticResource MenuTextStyle}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="btnMyOrders"
+                            Style="{StaticResource SidebarButtonStyle}"
+                            Click="MyOrders_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📋"
+                                       Width="30"
+                                       FontSize="21"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock Text="Order History"
+                                       Margin="14,0,0,0"
+                                       Style="{StaticResource MenuTextStyle}"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Account card -->
+                <Border Grid.Row="4"
+                        Background="#233968"
+                        CornerRadius="18"
+                        Padding="16"
+                        MouseLeftButtonUp="AccountBar_Click"
+                        Cursor="Hand">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="52"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="24"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Width="52"
+                                Height="52"
+                                CornerRadius="26"
+                                Background="#25B7E8"
+                                VerticalAlignment="Center">
+                            <TextBlock Text="C"
+                                       Foreground="White"
+                                       FontSize="24"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+
+                        <StackPanel Grid.Column="1"
+                                    Margin="14,0,0,0"
+                                    VerticalAlignment="Center">
+                            <TextBlock x:Name="txtAccountName"
+                                       Text="Customer Name"
+                                       Foreground="White"
+                                       FontSize="15"
+                                       FontWeight="Bold"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock x:Name="txtAccountRole"
+                                       Text="Customer"
+                                       Margin="0,4,0,0"
+                                       Foreground="#AEBBD3"
+                                       FontSize="13"/>
+                        </StackPanel>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="⌄"
+                                   Foreground="#8EA3CC"
+                                   FontSize="16"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <Popup x:Name="AccountPopup"
+                       Placement="Top"
+                       PlacementTarget="{Binding ElementName=txtAccountRole}"
+                       StaysOpen="False"
+                       AllowsTransparency="True"
+                       PopupAnimation="Fade">
+                    <Border Background="White"
+                            CornerRadius="12"
+                            Padding="8"
+                            BorderBrush="#D6DEEA"
+                            BorderThickness="1"
+                            Width="150">
+                        <StackPanel>
+                            <Button Height="36"
+                                    Margin="0,0,0,6"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    HorizontalContentAlignment="Left"
+                                    Padding="10,0"
+                                    Cursor="Hand"
+                                    Click="Profile_Click">
+                                <TextBlock Text="Profile"
+                                           Foreground="#111827"
+                                           FontWeight="SemiBold"/>
+                            </Button>
+
+                            <Button Height="36"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    HorizontalContentAlignment="Left"
+                                    Padding="10,0"
+                                    Cursor="Hand"
+                                    Click="Logout_Click">
+                                <TextBlock Text="Logout"
+                                           Foreground="#DC2626"
+                                           FontWeight="SemiBold"/>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Popup>
+            </Grid>
+        </Border>
+
+        <!-- CONTENT -->
+        <Grid Grid.Column="1" Margin="22">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock x:Name="txtBreadcrumb"
+                       Text="SYSTEM / CUSTOMER WORKSPACE"
+                       Foreground="#94A3B8"
+                       FontSize="12"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,10"/>
+
+            <StackPanel Grid.Row="1" Margin="0,0,0,18">
+                <TextBlock x:Name="txtTitle"
+                           Text="Customer Workspace"
+                           Foreground="#0F172A"
+                           FontSize="30"
+                           FontWeight="Bold"/>
+                <TextBlock x:Name="txtSubtitle"
+                           Text="Browse products, create orders, and track your purchase history."
+                           Margin="0,8,0,0"
+                           Foreground="#64748B"
+                           FontSize="14"/>
+            </StackPanel>
+
+            <Border Grid.Row="2"
+                    Background="White"
+                    CornerRadius="18"
+                    Padding="18"
+                    BorderBrush="#DCE6F2"
+                    BorderThickness="1">
+                <ContentControl x:Name="ContentHost"/>
+            </Border>
+        </Grid>
+    </Grid>
 </UserControl>
