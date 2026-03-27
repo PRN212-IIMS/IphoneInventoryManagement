@@ -28,69 +28,63 @@
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2.6*"/>
-                        <ColumnDefinition Width="1.4*"/>
-                        <ColumnDefinition Width="1.4*"/>
-                        <ColumnDefinition Width="1.2*"/>
-                        <ColumnDefinition Width="1.6*"/>
-                        <ColumnDefinition Width="1.6*"/>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="2*"/>
-                    </Grid.ColumnDefinitions>
+    <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="2.6*"/>
+        <ColumnDefinition Width="1.4*"/>
+        <ColumnDefinition Width="1.4*"/>
+        <ColumnDefinition Width="1.6*"/>
+        <ColumnDefinition Width="1.6*"/>
+        <ColumnDefinition Width="2*"/>
+        <ColumnDefinition Width="2*"/>
+    </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                        <TextBlock Text="Search keyword" Margin="0,0,0,5" FontSize="12"/>
-                        <TextBox x:Name="txtSearch" Height="36" Padding="8,0"/>
-                    </StackPanel>
+    <StackPanel Grid.Column="0" Margin="0,0,10,0">
+        <TextBlock Text="Search keyword" Margin="0,0,0,5" FontSize="12"/>
+        <TextBox x:Name="txtSearch" Height="36" Padding="8,0"/>
+    </StackPanel>
 
-                    <StackPanel Grid.Column="1" Margin="0,0,10,0">
-                        <TextBlock Text="Color" Margin="0,0,0,5" FontSize="12"/>
-                        <ComboBox x:Name="cbColor" Height="36"/>
-                    </StackPanel>
+    <StackPanel Grid.Column="1" Margin="0,0,10,0">
+        <TextBlock Text="Color" Margin="0,0,0,5" FontSize="12"/>
+        <ComboBox x:Name="cbColor" Height="36"/>
+    </StackPanel>
 
-                    <StackPanel Grid.Column="2" Margin="0,0,10,0">
-                        <TextBlock Text="Storage" Margin="0,0,0,5" FontSize="12"/>
-                        <ComboBox x:Name="cbStorage" Height="36"/>
-                    </StackPanel>
+    <StackPanel Grid.Column="2" Margin="0,0,10,0">
+        <TextBlock Text="Storage" Margin="0,0,0,5" FontSize="12"/>
+        <ComboBox x:Name="cbStorage" Height="36"/>
+    </StackPanel>
 
-                    <StackPanel Grid.Column="3" Margin="0,0,10,0">
-                        <TextBlock Text="Quantity" Margin="0,0,0,5" FontSize="12"/>
-                        <TextBox x:Name="txtQuantity" Height="36" Text="1" Padding="8,0"/>
-                    </StackPanel>
+    <Button Grid.Column="3"
+            Content="Apply"
+            Style="{StaticResource PrimaryButton}"
+            HorizontalAlignment="Stretch"
+            Margin="0,18,10,0"
+            Background="#2563EB"
+            Click="ApplyFilter_Click"/>
 
-                    <Button Grid.Column="4"
-                            Content="Apply"
-                            Style="{StaticResource PrimaryButton}"
-                            HorizontalAlignment="Stretch"
-                            Margin="0,18,10,0"
-                            Background="#2563EB"
-                            Click="ApplyFilter_Click"/>
+    <Button Grid.Column="4"
+            Content="Reset"
+            Style="{StaticResource PrimaryButton}"
+            HorizontalAlignment="Stretch"
+            Margin="0,18,10,0"
+            Background="#64748B"
+            Click="ResetFilter_Click"/>
 
-                    <Button Grid.Column="5"
-                            Content="Reset"
-                            Style="{StaticResource PrimaryButton}"
-                            HorizontalAlignment="Stretch"
-                            Margin="0,18,10,0"
-                            Background="#64748B"
-                            Click="ResetFilter_Click"/>
+    <Button Grid.Column="5"
+            Content="Add To Cart"
+            Style="{StaticResource PrimaryButton}"
+            HorizontalAlignment="Stretch"
+            Margin="0,18,10,0"
+            Background="#059669"
+            Click="AddToCart_Click"/>
 
-                    <Button Grid.Column="6"
-                            Content="Add To Cart"
-                            Style="{StaticResource PrimaryButton}"
-                            HorizontalAlignment="Stretch"
-                            Margin="0,18,10,0"
-                            Background="#059669"
-                            Click="AddToCart_Click"/>
-
-                    <Button Grid.Column="7"
-                            Content="Open Checkout"
-                            Style="{StaticResource PrimaryButton}"
-                            Margin="0,18,0,0"
-                            HorizontalAlignment="Stretch"
-                            Background="#7C3AED"
-                            Click="OpenCheckout_Click"/>
-                </Grid>
+    <Button Grid.Column="6"
+            Content="Open Checkout"
+            Style="{StaticResource PrimaryButton}"
+            Margin="0,18,0,0"
+            HorizontalAlignment="Stretch"
+            Background="#7C3AED"
+            Click="OpenCheckout_Click"/>
+</Grid>
             </Grid>
         </Border>
 
