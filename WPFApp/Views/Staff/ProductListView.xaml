@@ -1,0 +1,148 @@
+﻿<UserControl x:Class="WPFApp.Views.Staff.ProductListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Product List"
+                   FontSize="26"
+                   FontWeight="Bold"
+                   Foreground="#19345C"
+                   Margin="0,0,0,15"/>
+
+        <Grid Grid.Row="1" Margin="0,0,0,15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2.2*"/>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBox x:Name="txtSearch"
+                     Grid.Column="0"
+                     Height="34"
+                     Margin="0,0,10,0"
+                     VerticalContentAlignment="Center"
+                     FontSize="14"
+                     ToolTip="Search by product name, model, color, storage..." />
+
+            <ComboBox x:Name="cbColor"
+                      Grid.Column="1"
+                      Height="34"
+                      Margin="0,0,10,0"
+                      FontSize="14"/>
+
+            <ComboBox x:Name="cbStorage"
+                      Grid.Column="2"
+                      Height="34"
+                      Margin="0,0,10,0"
+                      FontSize="14"/>
+
+            <ComboBox x:Name="cbStatus"
+                      Grid.Column="3"
+                      Height="34"
+                      Margin="0,0,10,0"
+                      FontSize="14"/>
+
+            <Button x:Name="btnSearch"
+                    Grid.Column="4"
+                    Content="Search"
+                    Width="90"
+                    Height="34"
+                    Margin="0,0,10,0"
+                    Click="btnSearch_Click"/>
+
+            <Button x:Name="btnReset"
+                    Grid.Column="5"
+                    Content="Reset"
+                    Width="90"
+                    Height="34"
+                    Margin="0,0,10,0"
+                    Click="btnReset_Click"/>
+
+            <Button x:Name="btnAdd"
+                    Grid.Column="6"
+                    Content="Add Product"
+                    Width="110"
+                    Height="34"
+                    Click="btnAdd_Click"/>
+        </Grid>
+
+        <Border Grid.Row="2"
+                Background="White"
+                BorderBrush="#D9E2EC"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="8">
+            <DataGrid x:Name="dgProducts"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      RowHeight="36"
+                      ColumnHeaderHeight="36"
+                      SelectionMode="Single"
+                      SelectionUnit="FullRow">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID"
+                                        Binding="{Binding ProductId}"
+                                        Width="60"/>
+
+                    <DataGridTextColumn Header="Name"
+                                        Binding="{Binding ProductName}"
+                                        Width="190"/>
+
+                    <DataGridTextColumn Header="Model"
+                                        Binding="{Binding Model}"
+                                        Width="140"/>
+
+                    <DataGridTextColumn Header="Color"
+                                        Binding="{Binding Color}"
+                                        Width="110"/>
+
+                    <DataGridTextColumn Header="Storage"
+                                        Binding="{Binding StorageCapacity}"
+                                        Width="110"/>
+
+                    <DataGridTextColumn Header="Price"
+                                        Binding="{Binding Price, StringFormat={}{0:N0}}"
+                                        Width="120"/>
+
+                    <DataGridTextColumn Header="Stock"
+                                        Binding="{Binding StockQuantity}"
+                                        Width="80"/>
+
+                    <DataGridCheckBoxColumn Header="Status"
+                                            Binding="{Binding Status}"
+                                            Width="85"/>
+
+                    <DataGridTemplateColumn Header="Actions" Width="190">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Content="Edit"
+                                            Width="70"
+                                            Height="28"
+                                            Margin="0,0,8,0"
+                                            Click="btnEdit_Click"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
+</UserControl>

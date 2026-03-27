@@ -16,5 +16,8 @@ namespace Services.Interfaces
         void CreateProduct(Product product);
         void UpdateProduct(Product product);
         void DeleteProduct(int id);
+        void UpdateStockQuantity(int productId, int newQuantity);
+        List<string> GetAllColors();
+        List<string> GetAllStorageCapacities();
     }
 }

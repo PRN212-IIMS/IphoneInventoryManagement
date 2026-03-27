@@ -1,0 +1,83 @@
+﻿<Window x:Class="WPFApp.Views.Staff.ProductEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Product"
+        Height="520" Width="520"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="#F4F7FB">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="txtTitle"
+                   Text="Add Product"
+                   FontSize="28"
+                   FontWeight="Bold"
+                   Foreground="#19345C"
+                   Margin="0,0,0,20"/>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="42"/>
+                <RowDefinition Height="42"/>
+                <RowDefinition Height="42"/>
+                <RowDefinition Height="42"/>
+                <RowDefinition Height="42"/>
+                <RowDefinition Height="42"/>
+                <RowDefinition Height="42"/>
+                <RowDefinition Height="42"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Product Name:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+            <TextBox x:Name="txtProductName" Grid.Row="0" Grid.Column="1" Height="30" VerticalContentAlignment="Center"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Model:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+            <TextBox x:Name="txtModel" Grid.Row="1" Grid.Column="1" Height="30" VerticalContentAlignment="Center"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Color:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+            <TextBox x:Name="txtColor" Grid.Row="2" Grid.Column="1" Height="30" VerticalContentAlignment="Center"/>
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Storage:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+            <TextBox x:Name="txtStorage" Grid.Row="3" Grid.Column="1" Height="30" VerticalContentAlignment="Center"/>
+
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Price:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+            <TextBox x:Name="txtPrice" Grid.Row="4" Grid.Column="1" Height="30" VerticalContentAlignment="Center"/>
+
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="Stock Quantity:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+            <TextBox x:Name="txtStockQuantity" Grid.Row="5" Grid.Column="1" Height="30" VerticalContentAlignment="Center"/>
+
+            <TextBlock Grid.Row="6" Grid.Column="0" Text="Image URL:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+            <TextBox x:Name="txtImageUrl" Grid.Row="6" Grid.Column="1" Height="30" VerticalContentAlignment="Center"/>
+
+            <TextBlock Grid.Row="7" Grid.Column="0" Text="Status:" VerticalAlignment="Center" FontWeight="SemiBold"/>
+            <CheckBox x:Name="chkStatus" Grid.Row="7" Grid.Column="1" VerticalAlignment="Center" IsChecked="True" Content="Active"/>
+        </Grid>
+
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,20,0,0">
+            <Button x:Name="btnSave"
+                    Content="Save"
+                    Width="100"
+                    Height="34"
+                    Margin="0,0,10,0"
+                    Click="btnSave_Click"/>
+
+            <Button x:Name="btnCancel"
+                    Content="Cancel"
+                    Width="100"
+                    Height="34"
+                    Click="btnCancel_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
