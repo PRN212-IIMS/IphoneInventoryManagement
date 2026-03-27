@@ -139,6 +139,16 @@
                         <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="140"/>
                         <DataGridTextColumn Header="Role" Binding="{Binding Role}" Width="120"/>
                         <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
+
+                        <DataGridTemplateColumn Header="Edit" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="Edit"
+                        Padding="10,4"
+                        Click="btnEdit_Click"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
             </Grid>
