@@ -1,183 +1,282 @@
-using System.Net.Mail;
-using System.Text.RegularExpressions;
-using BusinessObjects;
+﻿using BusinessObjects;
+using DataAccessLayer;
 using Repositories.Implementations;
 using Repositories.Interfaces;
-using Services.Helpers;
 using Services.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Mail;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Services.Helpers;
 
-namespace Services.Implementations;
-
-public class StaffService : IStaffService
+namespace Services.Implementations
 {
-    private readonly IStaffRepository _staffRepository;
-
-    public StaffService()
+    public class StaffService : IStaffService
     {
-        _staffRepository = new StaffRepository();
-    }
+        private readonly IStaffRepository _staffRepository;
 
-    public List<Staff> GetAllStaff()
-    {
-        return _staffRepository.GetAllStaff();
-    }
-
-    public Staff? GetStaffById(int id)
-    {
-        if (id <= 0)
+        public StaffService()
         {
-            return null;
+            _staffRepository = new StaffRepository();
         }
 
-        return _staffRepository.GetStaffById(id);
-    }
-
-    public List<Staff> SearchStaff(string keyword)
-    {
-        if (string.IsNullOrWhiteSpace(keyword))
+        public List<Staff> GetAllStaff()
         {
             return _staffRepository.GetAllStaff();
         }
 
-        return _staffRepository.SearchStaff(keyword);
-    }
-
-    public void CreateStaff(Staff staff)
-    {
-        if (staff is null)
+        public Staff? GetStaffById(int id)
         {
-            throw new ArgumentNullException(nameof(staff));
+            return _staffRepository.GetStaffById(id);
         }
 
-        var fullName = staff.FullName?.Trim() ?? string.Empty;
-        var email = staff.Email?.Trim().ToLowerInvariant() ?? string.Empty;
-        var phone = staff.Phone?.Trim() ?? string.Empty;
-        var password = staff.Password?.Trim() ?? string.Empty;
-
-        if (string.IsNullOrWhiteSpace(fullName)
-            || string.IsNullOrWhiteSpace(email)
-            || string.IsNullOrWhiteSpace(phone)
-            || string.IsNullOrWhiteSpace(password))
+        public List<Staff> SearchStaff(string keyword)
         {
-            throw new Exception("Please fill in all staff fields.");
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                return _staffRepository.GetAllStaff();
+            }
+
+            return _staffRepository.SearchStaff(keyword);
         }
 
-        if (!Regex.IsMatch(fullName, @"^[\p{L} ]+$"))
+        public List<Staff> FilterStaff(string? keyword, string? status)
         {
-            throw new Exception("Full name must contain letters only.");
+            return _staffRepository.FilterStaff(keyword, status);
         }
 
-        if (!IsValidEmail(email))
+        public bool CreateStaff(Staff staff, out string message)
         {
-            throw new Exception("Email is not valid.");
+            if (staff == null)
+            {
+                message = "Staff data is required.";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(staff.FullName) ||
+                string.IsNullOrWhiteSpace(staff.Email) ||
+                string.IsNullOrWhiteSpace(staff.Password))
+            {
+                message = "Full name, email, and password are required.";
+                return false;
+            }
+
+            if (!IsValidFullName(staff.FullName.Trim()))
+            {
+                message = "Full name must contain letters only.";
+                return false;
+            }
+
+            if (!IsValidEmail(staff.Email.Trim()))
+            {
+                message = "Please enter a valid email address.";
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(staff.Phone) && !IsValidPhone(staff.Phone.Trim()))
+            {
+                message = "Phone number must be 10 digits and start with 0.";
+                return false;
+            }
+
+            if (!IsValidPassword(staff.Password.Trim()))
+            {
+                message = "Password must contain at least 8 characters, 1 uppercase letter, 1 number, 1 special character, and no spaces.";
+                return false;
+            }
+
+            using var context = new IPhoneInventoryDbContext();
+            string normalizedEmail = staff.Email.Trim().ToLowerInvariant();
+
+            bool emailExists =
+                context.Admins.Any(x => x.Email != null && x.Email.ToLower() == normalizedEmail) ||
+                context.Staff.Any(x => x.Email != null && x.Email.ToLower() == normalizedEmail) ||
+                context.Customers.Any(x => x.Email != null && x.Email.ToLower() == normalizedEmail);
+
+            if (emailExists)
+            {
+                message = "This email is already in use.";
+                return false;
+            }
+
+            staff.FullName = staff.FullName.Trim();
+            staff.Email = normalizedEmail;
+            string plainPassword = staff.Password.Trim();
+            staff.Password = PasswordHasher.Hash(plainPassword);
+            staff.Phone = string.IsNullOrWhiteSpace(staff.Phone) ? null : staff.Phone.Trim();
+            staff.Status = NormalizeStatus(staff.Status);
+
+            try
+            {
+                _staffRepository.AddStaff(staff);
+                message = "Staff account created successfully.";
+                return true;
+            }
+            catch
+            {
+                message = "Unable to create staff account.";
+                return false;
+            }
         }
 
-        if (!Regex.IsMatch(phone, @"^0\d{9}$"))
+        public bool UpdateStaff(Staff staff, out string message)
         {
-            throw new Exception("Phone number must be 10 digits and start with 0.");
+            var existingStaff = _staffRepository.GetStaffById(staff.StaffId);
+            if (existingStaff == null)
+            {
+                message = "Staff not found.";
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(staff.FullName) ||
+                string.IsNullOrWhiteSpace(staff.Email))
+            {
+                message = "Full name and email are required.";
+                return false;
+            }
+
+            if (!IsValidFullName(staff.FullName.Trim()))
+            {
+                message = "Full name must contain letters only.";
+                return false;
+            }
+
+            if (!IsValidEmail(staff.Email.Trim()))
+            {
+                message = "Please enter a valid email address.";
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(staff.Phone) && !IsValidPhone(staff.Phone.Trim()))
+            {
+                message = "Phone number must be 10 digits and start with 0.";
+                return false;
+            }
+
+            using var context = new IPhoneInventoryDbContext();
+            string normalizedEmail = staff.Email.Trim().ToLowerInvariant();
+
+            bool emailExists =
+                context.Admins.Any(x => x.Email != null && x.Email.ToLower() == normalizedEmail) ||
+                context.Staff.Any(x => x.StaffId != staff.StaffId && x.Email != null && x.Email.ToLower() == normalizedEmail) ||
+                context.Customers.Any(x => x.Email != null && x.Email.ToLower() == normalizedEmail);
+
+            if (emailExists)
+            {
+                message = "This email is already in use.";
+                return false;
+            }
+
+            existingStaff.FullName = staff.FullName.Trim();
+            existingStaff.Email = normalizedEmail;
+            existingStaff.Phone = string.IsNullOrWhiteSpace(staff.Phone) ? null : staff.Phone.Trim();
+            existingStaff.Status = NormalizeStatus(staff.Status);
+
+            if (!string.IsNullOrWhiteSpace(staff.Password))
+            {
+                string plainPassword = staff.Password.Trim();
+
+                if (!IsValidPassword(plainPassword))
+                {
+                    message = "Password must contain at least 8 characters, 1 uppercase letter, 1 number, 1 special character, and no spaces.";
+                    return false;
+                }
+
+                existingStaff.Password = PasswordHasher.Hash(plainPassword);
+            }
+
+            try
+            {
+                _staffRepository.UpdateStaff(existingStaff);
+                message = "Staff account updated successfully.";
+                return true;
+            }
+            catch
+            {
+                message = "Unable to update staff account.";
+                return false;
+            }
         }
 
-        if (!IsValidPassword(password))
+        public bool ChangeStaffStatus(int staffId, string status, out string message)
         {
-            throw new Exception("Password must be at least 8 characters, include 1 uppercase letter, 1 number, 1 special character, and contain no spaces.");
+            var existingStaff = _staffRepository.GetStaffById(staffId);
+            if (existingStaff == null)
+            {
+                message = "Staff not found.";
+                return false;
+            }
+
+            string normalizedStatus = NormalizeStatus(status);
+
+            if (normalizedStatus != "Active" && normalizedStatus != "Inactive")
+            {
+                message = "Status must be Active or Inactive.";
+                return false;
+            }
+
+            try
+            {
+                _staffRepository.UpdateStatus(staffId, normalizedStatus);
+                message = "Staff status updated successfully.";
+                return true;
+            }
+            catch
+            {
+                message = "Unable to change staff status.";
+                return false;
+            }
         }
 
-        var existing = _staffRepository.GetStaffByEmail(email);
-        if (existing is not null)
+        private static string NormalizeStatus(string? status)
         {
-            throw new Exception("Email is already used by another staff account.");
+            if (string.IsNullOrWhiteSpace(status))
+            {
+                return "Active";
+            }
+
+            string trimmed = status.Trim();
+            return char.ToUpper(trimmed[0]) + trimmed.Substring(1).ToLower();
         }
 
-        staff.FullName = fullName;
-        staff.Email = email;
-        staff.Phone = phone;
-        staff.Password = PasswordHasher.Hash(password);
-        staff.Status = string.IsNullOrWhiteSpace(staff.Status) ? "Active" : staff.Status;
-
-        _staffRepository.AddStaff(staff);
-    }
-
-    public void UpdateStaff(Staff staff)
-    {
-        if (staff is null)
+        private static bool IsValidFullName(string fullName)
         {
-            throw new ArgumentNullException(nameof(staff));
+            return Regex.IsMatch(fullName, @"^[\p{L} ]+$");
         }
 
-        if (staff.StaffId <= 0)
+        private static bool IsValidEmail(string email)
         {
-            throw new Exception("Staff ID is invalid.");
+            try
+            {
+                _ = new MailAddress(email);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-        var existing = _staffRepository.GetStaffById(staff.StaffId);
-        if (existing is null)
+        private static bool IsValidPhone(string phone)
         {
-            throw new Exception("Staff not found.");
+            return Regex.IsMatch(phone, @"^0\d{9}$");
         }
 
-        var fullName = staff.FullName?.Trim() ?? string.Empty;
-        var phone = staff.Phone?.Trim() ?? string.Empty;
-
-        if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(phone))
+        private static bool IsValidPassword(string password)
         {
-            throw new Exception("Full name and phone must not be empty.");
+            if (password.Length < 8 || password.Any(char.IsWhiteSpace))
+            {
+                return false;
+            }
+
+            bool hasUpper = password.Any(char.IsUpper);
+            bool hasDigit = password.Any(char.IsDigit);
+            bool hasSpecial = password.Any(ch => !char.IsLetterOrDigit(ch));
+
+            return hasUpper && hasDigit && hasSpecial;
         }
-
-        if (!Regex.IsMatch(fullName, @"^[\p{L} ]+$"))
-        {
-            throw new Exception("Full name must contain letters only.");
-        }
-
-        if (!Regex.IsMatch(phone, @"^0\d{9}$"))
-        {
-            throw new Exception("Phone number must be 10 digits and start with 0.");
-        }
-
-        existing.FullName = fullName;
-        existing.Phone = phone;
-        existing.Status = string.IsNullOrWhiteSpace(staff.Status) ? existing.Status : staff.Status;
-        _staffRepository.UpdateStaff(existing);
-    }
-
-    public void ChangeStaffStatus(int staffId, string status)
-    {
-        if (staffId <= 0)
-        {
-            throw new Exception("Staff ID is invalid.");
-        }
-
-        var normalizedStatus = status.Trim();
-        if (normalizedStatus != "Active" && normalizedStatus != "Inactive")
-        {
-            throw new Exception("Status must be Active or Inactive.");
-        }
-
-        _staffRepository.UpdateStatus(staffId, normalizedStatus);
-    }
-
-    private static bool IsValidEmail(string email)
-    {
-        try
-        {
-            _ = new MailAddress(email);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static bool IsValidPassword(string password)
-    {
-        if (password.Length < 8 || password.Any(char.IsWhiteSpace))
-        {
-            return false;
-        }
-
-        var hasUppercase = password.Any(char.IsUpper);
-        var hasDigit = password.Any(char.IsDigit);
-        var hasSpecialCharacter = password.Any(ch => !char.IsLetterOrDigit(ch));
-        return hasUppercase && hasDigit && hasSpecialCharacter;
     }
 }

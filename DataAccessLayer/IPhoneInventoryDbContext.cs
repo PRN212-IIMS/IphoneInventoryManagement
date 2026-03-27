@@ -146,7 +146,6 @@ public partial class IPhoneInventoryDbContext : DbContext
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.CustomerId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Orders_Customer");
 
             entity.HasOne(d => d.Staff).WithMany(p => p.Orders)

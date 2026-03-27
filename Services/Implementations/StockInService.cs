@@ -1,106 +1,61 @@
-using BusinessObjects;
+﻿using BusinessObjects;
 using Repositories.Implementations;
 using Repositories.Interfaces;
 using Services.Interfaces;
 
-namespace Services.Implementations;
-
-public class StockInService : IStockInService
+namespace Services.Implementations
 {
-    private readonly IStockInRepository _stockInRepository;
-    private readonly IProductRepository _productRepository;
-
-    public StockInService()
+    public class StockInService : IStockInService
     {
-        _stockInRepository = new StockInRepository();
-        _productRepository = new ProductRepository();
-    }
+        private readonly IStockInRepository _stockInRepository;
 
-    public List<StockIn> GetAllStockIns()
-    {
-        return _stockInRepository.GetAllStockIns();
-    }
-
-    public StockIn? GetStockInById(int id)
-    {
-        if (id <= 0)
+        public StockInService()
         {
-            return null;
+            _stockInRepository = new StockInRepository();
         }
 
-        return _stockInRepository.GetStockInById(id);
-    }
-
-    public List<StockIn> SearchStockIns(string keyword)
-    {
-        if (string.IsNullOrWhiteSpace(keyword))
+        public List<StockIn> GetAllStockIns()
         {
             return _stockInRepository.GetAllStockIns();
         }
 
-        return _stockInRepository.SearchStockIns(keyword);
-    }
-
-    public void CreateStockIn(StockIn stockIn, List<StockInDetail> stockInDetails)
-    {
-        if (stockIn is null)
+        public StockIn? GetStockInById(int id)
         {
-            throw new ArgumentNullException(nameof(stockIn));
+            if (id <= 0)
+                throw new Exception("ID phiếu nhập không hợp lệ.");
+
+            return _stockInRepository.GetStockInById(id);
         }
 
-        if (stockIn.CreatedByStaffId <= 0)
+        public List<StockIn> SearchStockIns(string keyword)
         {
-            throw new Exception("Staff ID is invalid.");
+            return _stockInRepository.SearchStockIns(keyword ?? string.Empty);
         }
 
-        if (stockInDetails is null || stockInDetails.Count == 0)
+        public void CreateStockIn(StockIn stockIn, List<StockInDetail> details)
         {
-            throw new Exception("Stock-in must contain at least one product.");
-        }
+            if (stockIn == null)
+                throw new ArgumentNullException(nameof(stockIn));
 
-        foreach (var detail in stockInDetails)
-        {
-            if (detail.ProductId <= 0)
+            if (stockIn.CreatedByStaffId <= 0)
+                throw new Exception("Nhân viên tạo phiếu nhập không hợp lệ.");
+
+            if (details == null || details.Count == 0)
+                throw new Exception("Phiếu nhập phải có ít nhất 1 sản phẩm.");
+
+            foreach (var detail in details)
             {
-                throw new Exception("Product ID is invalid.");
+                if (detail.ProductId <= 0)
+                    throw new Exception("Sản phẩm trong phiếu nhập không hợp lệ.");
+
+                if (detail.Quantity <= 0)
+                    throw new Exception("Số lượng nhập phải lớn hơn 0.");
+
+                if (detail.ImportPrice < 0)
+                    throw new Exception("Đơn giá nhập không hợp lệ.");
             }
 
-            if (detail.Quantity <= 0)
-            {
-                throw new Exception("Quantity must be greater than 0.");
-            }
-
-            if (detail.ImportPrice < 0)
-            {
-                throw new Exception("Import price cannot be negative.");
-            }
-
-            var product = _productRepository.GetProductById(detail.ProductId);
-            if (product is null)
-            {
-                throw new Exception($"Product ID {detail.ProductId} was not found.");
-            }
-        }
-
-        stockIn.StockInDate = DateTime.Now;
-        _stockInRepository.AddStockIn(stockIn);
-
-        foreach (var detail in stockInDetails)
-        {
-            detail.StockInId = stockIn.StockInId;
-        }
-
-        _stockInRepository.AddStockInDetails(stockInDetails);
-
-        foreach (var detail in stockInDetails)
-        {
-            var product = _productRepository.GetProductById(detail.ProductId);
-            if (product is null)
-            {
-                continue;
-            }
-
-            _productRepository.UpdateStockQuantity(product.ProductId, product.StockQuantity + detail.Quantity);
+            _stockInRepository.CreateStockInWithDetails(stockIn, details);
         }
     }
 }

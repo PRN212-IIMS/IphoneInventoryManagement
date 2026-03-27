@@ -1,31 +1,31 @@
 ﻿using BusinessObjects;
+using Microsoft.EntityFrameworkCore;
 
 namespace DataAccessLayer
 {
     public class ProductDAO
     {
-        private readonly IPhoneInventoryDbContext _context;
-
-        public ProductDAO()
-        {
-            _context = new IPhoneInventoryDbContext();
-        }
-
         public List<Product> GetAllProducts()
         {
-            return _context.Products
+            using var context = new IPhoneInventoryDbContext();
+            return context.Products
+                .AsNoTracking()
                 .OrderBy(p => p.ProductName)
                 .ToList();
         }
 
         public Product? GetProductById(int id)
         {
-            return _context.Products.FirstOrDefault(p => p.ProductId == id);
+            using var context = new IPhoneInventoryDbContext();
+            return context.Products
+                .AsNoTracking()
+                .FirstOrDefault(p => p.ProductId == id);
         }
 
         public List<Product> SearchProducts(string keyword)
         {
-            var query = _context.Products.AsQueryable();
+            using var context = new IPhoneInventoryDbContext();
+            var query = context.Products.AsNoTracking().AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -43,7 +43,8 @@ namespace DataAccessLayer
 
         public List<Product> FilterProducts(string? color, string? storageCapacity, bool? status)
         {
-            var query = _context.Products.AsQueryable();
+            using var context = new IPhoneInventoryDbContext();
+            var query = context.Products.AsNoTracking().AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(color))
             {
@@ -63,18 +64,46 @@ namespace DataAccessLayer
             return query.OrderBy(p => p.ProductName).ToList();
         }
 
+        public List<string> GetAllColors()
+        {
+            using var context = new IPhoneInventoryDbContext();
+            return context.Products
+                .AsNoTracking()
+                .Where(p => !string.IsNullOrWhiteSpace(p.Color))
+                .Select(p => p.Color!)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToList();
+        }
+
+        public List<string> GetAllStorageCapacities()
+        {
+            using var context = new IPhoneInventoryDbContext();
+            return context.Products
+                .AsNoTracking()
+                .Where(p => !string.IsNullOrWhiteSpace(p.StorageCapacity))
+                .Select(p => p.StorageCapacity!)
+                .Distinct()
+                .OrderBy(s => s)
+                .ToList();
+        }
+
         public void AddProduct(Product product)
         {
+            using var context = new IPhoneInventoryDbContext();
+
             product.CreatedAt = DateTime.Now;
             product.UpdatedAt = DateTime.Now;
 
-            _context.Products.Add(product);
-            _context.SaveChanges();
+            context.Products.Add(product);
+            context.SaveChanges();
         }
 
         public void UpdateProduct(Product product)
         {
-            var existingProduct = _context.Products.FirstOrDefault(p => p.ProductId == product.ProductId);
+            using var context = new IPhoneInventoryDbContext();
+
+            var existingProduct = context.Products.FirstOrDefault(p => p.ProductId == product.ProductId);
             if (existingProduct == null)
             {
                 throw new Exception("Không tìm thấy sản phẩm.");
@@ -91,24 +120,35 @@ namespace DataAccessLayer
             existingProduct.Status = product.Status;
             existingProduct.UpdatedAt = DateTime.Now;
 
-            _context.SaveChanges();
+            context.SaveChanges();
         }
 
         public void DeleteProduct(int id)
         {
-            var product = _context.Products.FirstOrDefault(p => p.ProductId == id);
+            using var context = new IPhoneInventoryDbContext();
+
+            var product = context.Products.FirstOrDefault(p => p.ProductId == id);
             if (product == null)
             {
                 throw new Exception("Không tìm thấy sản phẩm.");
             }
 
-            _context.Products.Remove(product);
-            _context.SaveChanges();
+            product.Status = false;
+            product.UpdatedAt = DateTime.Now;
+
+            context.SaveChanges();
         }
 
         public void UpdateStockQuantity(int productId, int newQuantity)
         {
-            var product = _context.Products.FirstOrDefault(p => p.ProductId == productId);
+            if (newQuantity < 0)
+            {
+                throw new Exception("Số lượng tồn kho không được âm.");
+            }
+
+            using var context = new IPhoneInventoryDbContext();
+
+            var product = context.Products.FirstOrDefault(p => p.ProductId == productId);
             if (product == null)
             {
                 throw new Exception("Không tìm thấy sản phẩm.");
@@ -117,7 +157,7 @@ namespace DataAccessLayer
             product.StockQuantity = newQuantity;
             product.UpdatedAt = DateTime.Now;
 
-            _context.SaveChanges();
+            context.SaveChanges();
         }
     }
 }

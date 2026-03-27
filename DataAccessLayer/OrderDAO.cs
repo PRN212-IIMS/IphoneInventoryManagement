@@ -5,17 +5,13 @@ namespace DataAccessLayer
 {
     public class OrderDAO
     {
-        private readonly IPhoneInventoryDbContext _context;
-
-        public OrderDAO()
-        {
-            _context = new IPhoneInventoryDbContext();
-        }
-
         public List<Order> GetAllOrders()
         {
-            return _context.Orders
+            using var context = new IPhoneInventoryDbContext();
+            return context.Orders
+                .AsNoTracking()
                 .Include(o => o.Customer)
+                .Include(o => o.Staff)
                 .Include(o => o.OrderDetails)
                 .OrderByDescending(o => o.OrderDate)
                 .ToList();
@@ -23,7 +19,11 @@ namespace DataAccessLayer
 
         public List<Order> GetOrdersByCustomerId(int customerId)
         {
-            return _context.Orders
+            using var context = new IPhoneInventoryDbContext();
+            return context.Orders
+                .AsNoTracking()
+                .Include(o => o.Customer)
+                .Include(o => o.Staff)
                 .Include(o => o.OrderDetails)
                 .Where(o => o.CustomerId == customerId)
                 .OrderByDescending(o => o.OrderDate)
@@ -32,8 +32,11 @@ namespace DataAccessLayer
 
         public Order? GetOrderById(int id)
         {
-            return _context.Orders
+            using var context = new IPhoneInventoryDbContext();
+            return context.Orders
+                .AsNoTracking()
                 .Include(o => o.Customer)
+                .Include(o => o.Staff)
                 .Include(o => o.OrderDetails)
                     .ThenInclude(od => od.Product)
                 .FirstOrDefault(o => o.OrderId == id);
@@ -41,8 +44,12 @@ namespace DataAccessLayer
 
         public List<Order> SearchOrders(string keyword)
         {
-            var query = _context.Orders
+            using var context = new IPhoneInventoryDbContext();
+            var query = context.Orders
+                .AsNoTracking()
                 .Include(o => o.Customer)
+                .Include(o => o.Staff)
+                .Include(o => o.OrderDetails)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(keyword))
@@ -51,12 +58,13 @@ namespace DataAccessLayer
 
                 query = query.Where(o =>
                     o.OrderId.ToString().Contains(keyword) ||
-                    o.Status.Contains(keyword) ||
+                    (o.Status != null && o.Status.Contains(keyword)) ||
                     (o.ReceiverName != null && o.ReceiverName.Contains(keyword)) ||
                     (o.ReceiverPhone != null && o.ReceiverPhone.Contains(keyword)) ||
                     (o.ShippingAddress != null && o.ShippingAddress.Contains(keyword)) ||
-                    o.Customer.FullName.Contains(keyword) ||
-                    o.Customer.Email.Contains(keyword));
+                    (o.Customer != null && o.Customer.FullName.Contains(keyword)) ||
+                    (o.Customer != null && o.Customer.Email.Contains(keyword)) ||
+                    (o.Staff != null && o.Staff.FullName.Contains(keyword)));
             }
 
             return query
@@ -66,7 +74,13 @@ namespace DataAccessLayer
 
         public List<Order> FilterOrders(string? status, DateTime? fromDate, DateTime? toDate)
         {
-            var query = _context.Orders.AsQueryable();
+            using var context = new IPhoneInventoryDbContext();
+            var query = context.Orders
+                .AsNoTracking()
+                .Include(o => o.Customer)
+                .Include(o => o.Staff)
+                .Include(o => o.OrderDetails)
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(status))
             {
@@ -91,32 +105,38 @@ namespace DataAccessLayer
 
         public void AddOrder(Order order)
         {
-            _context.Orders.Add(order);
-            _context.SaveChanges();
+            using var context = new IPhoneInventoryDbContext();
+            context.Orders.Add(order);
+            context.SaveChanges();
         }
 
         public void AddOrderDetails(List<OrderDetail> orderDetails)
         {
-            _context.OrderDetails.AddRange(orderDetails);
-            _context.SaveChanges();
+            using var context = new IPhoneInventoryDbContext();
+            context.OrderDetails.AddRange(orderDetails);
+            context.SaveChanges();
         }
 
         public void UpdateOrder(Order order)
         {
-            _context.Orders.Update(order);
-            _context.SaveChanges();
+            using var context = new IPhoneInventoryDbContext();
+            context.Orders.Update(order);
+            context.SaveChanges();
         }
 
         public void UpdateOrderStatus(int orderId, string status)
         {
-            var order = _context.Orders.FirstOrDefault(o => o.OrderId == orderId);
+            using var context = new IPhoneInventoryDbContext();
+
+            var order = context.Orders.FirstOrDefault(o => o.OrderId == orderId);
             if (order == null)
             {
                 throw new Exception("Không tìm thấy đơn hàng.");
             }
 
             order.Status = status;
-            _context.SaveChanges();
+            order.ProcessedAt = DateTime.Now;
+            context.SaveChanges();
         }
     }
 }

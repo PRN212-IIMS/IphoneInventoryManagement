@@ -17,5 +17,7 @@ namespace Repositories.Interfaces
         void UpdateProduct(Product product);
         void DeleteProduct(int id);
         void UpdateStockQuantity(int productId, int newQuantity);
+        List<string> GetAllColors();
+        List<string> GetAllStorageCapacities();
     }
 }

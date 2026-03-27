@@ -52,5 +52,15 @@ namespace Repositories.Implementations
         {
             _productDAO.UpdateStockQuantity(productId, newQuantity);
         }
+
+        public List<string> GetAllColors()
+        {
+            return _productDAO.GetAllColors();
+        }
+
+        public List<string> GetAllStorageCapacities()
+        {
+            return _productDAO.GetAllStorageCapacities();
+        }
     }
 }

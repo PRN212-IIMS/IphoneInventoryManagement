@@ -1,0 +1,125 @@
+﻿<UserControl x:Class="WPFApp.Views.Staff.OrderListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Order List"
+                   FontSize="26"
+                   FontWeight="Bold"
+                   Foreground="#19345C"
+                   Margin="0,0,0,15"/>
+
+        <Grid Grid.Row="1" Margin="0,0,0,15">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*"/>
+                <ColumnDefinition Width="1.2*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBox x:Name="txtSearch"
+             Grid.Column="0"
+             Height="34"
+             Margin="0,0,10,0"
+             VerticalContentAlignment="Center"
+             ToolTip="Search by order id, customer, staff, status, receiver info"/>
+
+            <ComboBox x:Name="cbStatus"
+              Grid.Column="1"
+              Height="34"
+              Margin="0,0,10,0"/>
+
+            <Button x:Name="btnSearch"
+            Grid.Column="2"
+            Content="Search"
+            Width="90"
+            Height="34"
+            Margin="0,0,10,0"
+            Click="btnSearch_Click"/>
+
+            <Button x:Name="btnReset"
+            Grid.Column="3"
+            Content="Reset"
+            Width="90"
+            Height="34"
+            Margin="0,0,10,0"
+            Click="btnReset_Click"/>
+
+            <Button x:Name="btnCreate"
+            Grid.Column="4"
+            Content="Create Order"
+            Width="110"
+            Height="34"
+            Click="btnCreate_Click"/>
+        </Grid>
+
+        <Border Grid.Row="2"
+                Background="White"
+                BorderBrush="#D9E2EC"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="8">
+            <DataGrid x:Name="dgOrders"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      RowHeight="36"
+                      ColumnHeaderHeight="36">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="ID"
+                                        Binding="{Binding OrderId}"
+                                        Width="70"/>
+
+                    <DataGridTextColumn Header="Order Date"
+                                        Binding="{Binding OrderDate, StringFormat={}{0:dd/MM/yyyy HH:mm}}"
+                                        Width="170"/>
+
+                    <DataGridTextColumn Header="Customer"
+                                        Binding="{Binding Customer.FullName}"
+                                        Width="170"/>
+
+                    <DataGridTextColumn Header="Staff"
+                                        Binding="{Binding Staff.FullName}"
+                                        Width="160"/>
+
+                    <DataGridTextColumn Header="Receiver"
+                                        Binding="{Binding ReceiverName}"
+                                        Width="150"/>
+
+                    <DataGridTextColumn Header="Total Amount"
+                                        Binding="{Binding TotalAmount, StringFormat={}{0:N0}}"
+                                        Width="130"/>
+
+                    <DataGridTextColumn Header="Status"
+                                        Binding="{Binding Status}"
+                                        Width="110"/>
+
+                    <DataGridTemplateColumn Header="Actions" Width="220">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="View Detail"
+                                            Width="90"
+                                            Height="28"
+                                            Margin="0,0,8,0"
+                                            Click="btnDetail_Click"/>
+                                    <Button Content="Update Status"
+                                            Width="100"
+                                            Height="28"
+                                            Click="btnUpdateStatus_Click"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
+</UserControl>
