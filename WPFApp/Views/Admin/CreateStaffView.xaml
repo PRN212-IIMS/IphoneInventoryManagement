@@ -78,7 +78,8 @@
                     <PasswordBox x:Name="txtPassword"
                                  Height="36"
                                  FontSize="14"
-                                 Padding="10,0"/>
+                                 Padding="10,0"
+                                 VerticalContentAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Phone -->

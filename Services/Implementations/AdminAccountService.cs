@@ -52,11 +52,12 @@ namespace Services.Implementations
                 .ToList();
 
             return admins
-                .Concat(staffs)
-                .Concat(customers)
-                .OrderBy(x => x.Role)
-                .ThenBy(x => x.FullName)
-                .ToList();
+                 .Concat(staffs)
+                 .Concat(customers)
+                 .OrderBy(x => x.Role == "Staff" ? 1 :
+                  x.Role == "Customer" ? 2 : 3)
+                 .ThenByDescending(x => x.Id)
+                 .ToList();
         }
 
         public List<UserAccount> SearchAndFilter(string? keyword, string? role, string? status)
@@ -85,8 +86,9 @@ namespace Services.Implementations
             }
 
             return query
-                .OrderBy(x => x.Role)
-                .ThenBy(x => x.FullName)
+                .OrderBy(x => x.Role == "Staff" ? 1 :
+                  x.Role == "Customer" ? 2 : 3)
+                .ThenByDescending(x => x.Id)
                 .ToList();
         }
 
