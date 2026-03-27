@@ -8,7 +8,6 @@ using DataAccessLayer;
 using Microsoft.Extensions.Configuration;
 using Repositories.Implementations;
 using Repositories.Interfaces;
-using Services.Helpers;
 using Services.Interfaces;
 using Services.Models;
 
@@ -25,16 +24,14 @@ public class AuthService : IAuthService
 
         using var context = new IPhoneInventoryDbContext();
 
-        var admin = context.Admins.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail && x.Status == "Active");
-        if (admin is not null && IsValidHashedPassword(admin.Password, normalizedPassword))
+        var admin = context.Admins.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail && x.Password == normalizedPassword && x.Status == "Active");
+        if (admin is not null)
         {
             return new AuthenticatedUser
             {
-                UserId = admin.AdminId,
                 Role = "Admin",
                 FullName = admin.FullName,
-                Email = admin.Email,
-                Status = admin.Status
+                Email = admin.Email
             };
         }
 
@@ -47,36 +44,29 @@ public class AuthService : IAuthService
             {
                 Role = "Admin",
                 FullName = "System Admin",
-                Email = normalizedEmail,
-                Status = "Active"
+                Email = normalizedEmail
             };
         }
 
-        var staff = context.Staff.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail && x.Status == "Active");
-        if (staff is not null && IsValidHashedPassword(staff.Password, normalizedPassword))
+        var staff = context.Staff.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail && x.Password == normalizedPassword && x.Status == "Active");
+        if (staff is not null)
         {
             return new AuthenticatedUser
             {
-                UserId = staff.StaffId,
                 Role = "Staff",
                 FullName = staff.FullName,
-                Email = staff.Email,
-                Phone = staff.Phone ?? string.Empty,
-                Status = staff.Status
+                Email = staff.Email
             };
         }
 
-        var customer = context.Customers.FirstOrDefault(x => x.Email != null && x.Email.ToLower() == normalizedEmail && x.Status == "Active");
-        if (customer is not null && IsValidHashedPassword(customer.Password, normalizedPassword))
+        var customer = _customerRepository.GetCustomerByEmailAndPassword(normalizedEmail, normalizedPassword);
+        if (customer is not null && customer.Status == "Active")
         {
             return new AuthenticatedUser
             {
-                UserId = customer.CustomerId,
                 Role = "Customer",
                 FullName = customer.FullName,
-                Email = customer.Email,
-                Phone = customer.Phone ?? string.Empty,
-                Status = customer.Status
+                Email = customer.Email
             };
         }
 
@@ -140,7 +130,7 @@ public class AuthService : IAuthService
             FullName = fullName,
             Email = email,
             Phone = phone,
-            Password = PasswordHasher.Hash(password),
+            Password = password,
             Status = "Active"
         };
 
@@ -153,11 +143,6 @@ public class AuthService : IAuthService
         {
             return new RegisterCustomerResult { Success = false, Message = "Unable to create the account right now." };
         }
-    }
-
-    private static bool IsValidHashedPassword(string storedPassword, string providedPassword)
-    {
-        return PasswordHasher.IsHash(storedPassword) && PasswordHasher.Verify(providedPassword, storedPassword);
     }
 
     private static bool IsValidFullName(string fullName)
@@ -224,3 +209,7 @@ public class AuthService : IAuthService
         public string Password { get; set; } = string.Empty;
     }
 }
+
+
+
+

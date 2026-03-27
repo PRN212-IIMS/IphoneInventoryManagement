@@ -41,9 +41,7 @@ public partial class MainWindow : Window
                 RootHost.Children.Add(new StaffShellView(user, ShowLogin));
                 break;
             default:
-                CustomerMenuWindow customerWindow = new CustomerMenuWindow();
-                customerWindow.Show();
-                this.Close();
+                RootHost.Children.Add(new CustomerShellView(user, ShowLogin));
                 break;
         }
     }

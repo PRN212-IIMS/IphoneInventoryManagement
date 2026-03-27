@@ -4,8 +4,6 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Media;
-using Services.Implementations;
-using Services.Interfaces;
 using Services.Models;
 using WPFApp.Views.Shared;
 
@@ -14,14 +12,10 @@ namespace WPFApp.Views.Customer;
 public partial class CustomerShellView : UserControl
 {
     private readonly Action _logout;
-    private readonly IProfileService _profileService = new ProfileService();
-    private readonly AuthenticatedUser _user;
-    private ContentControl _contentHost = null!;
 
     public CustomerShellView(AuthenticatedUser user, Action logout)
     {
         InitializeComponent();
-        _user = user;
         _logout = logout;
         BuildLayout(user);
     }
@@ -45,13 +39,13 @@ public partial class CustomerShellView : UserControl
         topGrid.Children.Add(brand);
 
         var nav = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(34, 0, 0, 0) };
-        nav.Children.Add(CreateTopNavButton("Home", true, (_, _) => ShowHome()));
-        nav.Children.Add(CreateTopNavButton("Your Orders", false, (_, _) => MessageBox.Show("Order page is not connected yet.")));
+        nav.Children.Add(CreateTopNavButton("Home", true));
+        nav.Children.Add(CreateTopNavButton("Your Orders", false));
         Grid.SetColumn(nav, 1);
         topGrid.Children.Add(nav);
 
-        var accountButton = UiFactory.CreateCustomerAccountButton(_user.FullName);
-        var accountPopup = CreateCustomerPopup(_user);
+        var accountButton = UiFactory.CreateCustomerAccountButton(user.FullName);
+        var accountPopup = CreateCustomerPopup(user);
         accountPopup.PlacementTarget = accountButton;
         accountPopup.Placement = PlacementMode.Bottom;
         accountPopup.VerticalOffset = 10;
@@ -65,16 +59,6 @@ public partial class CustomerShellView : UserControl
         topBar.Child = topGrid;
         root.Children.Add(topBar);
 
-        _contentHost = new ContentControl();
-        Grid.SetRow(_contentHost, 1);
-        root.Children.Add(_contentHost);
-
-        RootHost.Children.Add(root);
-        ShowHome();
-    }
-
-    private void ShowHome()
-    {
         var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         var body = new StackPanel { Margin = new Thickness(34, 34, 34, 28) };
         body.Children.Add(CreateHero());
@@ -84,126 +68,10 @@ public partial class CustomerShellView : UserControl
         cards.Children.Add(CreateInfoCard("\uE72E", "Support Center", "Need help? Our team is available 24/7 for you.", UiFactory.Brush("#3A79F7"), new Thickness(18, 0, 0, 0)));
         body.Children.Add(cards);
         scroll.Content = body;
-        _contentHost.Content = scroll;
-    }
+        Grid.SetRow(scroll, 1);
+        root.Children.Add(scroll);
 
-    private void ShowProfile()
-    {
-        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        var host = new Grid { Margin = new Thickness(22, 18, 22, 18) };
-        var card = ProfileViewFactory.CreateProfileCard(
-            _user,
-            () => ShowEditProfile(),
-            () => ShowChangePassword(),
-            UiFactory.Brush("#DDF8FF"),
-            UiFactory.Brush("#0B7BAA"));
-        card.Width = 960;
-        card.MaxWidth = 960;
-        card.HorizontalAlignment = HorizontalAlignment.Center;
-        card.VerticalAlignment = VerticalAlignment.Top;
-        host.Children.Add(card);
-
-        scroll.Content = host;
-        _contentHost.Content = scroll;
-    }
-
-    private void ShowEditProfile(string? message = null, bool isError = false)
-    {
-        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        var host = new Grid { Margin = new Thickness(22, 18, 22, 18) };
-        var card = ProfileViewFactory.CreateEditProfileCard(
-            _user,
-            ShowProfile,
-            SaveProfile,
-            message,
-            isError);
-        card.Width = 960;
-        card.MaxWidth = 960;
-        card.HorizontalAlignment = HorizontalAlignment.Center;
-        card.VerticalAlignment = VerticalAlignment.Top;
-        host.Children.Add(card);
-        scroll.Content = host;
-        _contentHost.Content = scroll;
-    }
-
-    private void ShowChangePassword(string? message = null, bool isError = false, string currentPassword = "", string newPassword = "", string confirmNewPassword = "")
-    {
-        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        var host = new Grid { Margin = new Thickness(18, 14, 18, 14) };
-        var card = ProfileViewFactory.CreateChangePasswordCard(
-            ShowProfile,
-            SavePassword,
-            message,
-            isError,
-            currentPassword,
-            newPassword,
-            confirmNewPassword);
-        card.Width = 1020;
-        card.MaxWidth = 1020;
-        card.HorizontalAlignment = HorizontalAlignment.Center;
-        card.VerticalAlignment = VerticalAlignment.Top;
-        host.Children.Add(card);
-        scroll.Content = host;
-        _contentHost.Content = scroll;
-    }
-
-    private void SaveProfile(string fullName, string phone)
-    {
-        var result = _profileService.UpdateProfile(new UpdateProfileRequest
-        {
-            UserId = _user.UserId,
-            Role = _user.Role,
-            FullName = fullName,
-            Phone = phone
-        });
-
-        if (!result.Success)
-        {
-            ShowEditProfile(result.Message, true);
-            return;
-        }
-
-        if (result.UpdatedUser is not null)
-        {
-            ApplyUpdatedUser(result.UpdatedUser);
-        }
-
-        ReloadLayout(ShowProfile);
-    }
-
-    private void SavePassword(string currentPassword, string newPassword, string confirmNewPassword)
-    {
-        var result = _profileService.ChangePassword(new UpdatePasswordRequest
-        {
-            UserId = _user.UserId,
-            Role = _user.Role,
-            CurrentPassword = currentPassword,
-            NewPassword = newPassword,
-            ConfirmNewPassword = confirmNewPassword
-        });
-
-        if (!result.Success)
-        {
-            ShowChangePassword(result.Message, true, currentPassword, newPassword, confirmNewPassword);
-            return;
-        }
-
-        ShowChangePassword(result.Message, false);
-    }
-
-    private void ApplyUpdatedUser(AuthenticatedUser updatedUser)
-    {
-        _user.FullName = updatedUser.FullName;
-        _user.Phone = updatedUser.Phone;
-        _user.Status = updatedUser.Status;
-        _user.Email = updatedUser.Email;
-    }
-
-    private void ReloadLayout(Action nextView)
-    {
-        RootHost.Children.Clear();
-        BuildLayout(_user);
-        nextView();
+        RootHost.Children.Add(root);
     }
 
     private Border CreateHero()
@@ -238,11 +106,7 @@ public partial class CustomerShellView : UserControl
         var stack = new StackPanel();
         stack.Children.Add(new TextBlock { Text = "SIGNED IN AS", FontFamily = UiFactory.Font("Bahnschrift SemiBold"), FontSize = 14, Foreground = UiFactory.Brush("#93A6C2") });
         stack.Children.Add(new TextBlock { Text = user.Email, Margin = new Thickness(0, 10, 0, 18), FontFamily = UiFactory.Font("Bahnschrift SemiBold"), FontSize = 16, Foreground = UiFactory.Brush("#243D64") });
-        stack.Children.Add(CreatePopupAction("\uE77B", "Your Profile", UiFactory.Brush("#445D84"), UiFactory.Brush("#7D95B5"), (_, _) =>
-        {
-            popup.IsOpen = false;
-            ShowProfile();
-        }));
+        stack.Children.Add(CreatePopupAction("\uE77B", "Your Profile", UiFactory.Brush("#445D84"), UiFactory.Brush("#7D95B5"), (_, _) => MessageBox.Show("Profile screen is not connected yet.")));
         stack.Children.Add(new Border { Height = 1, Background = UiFactory.Brush("#EEF2F7"), Margin = new Thickness(0, 8, 0, 8) });
         stack.Children.Add(CreatePopupAction("\uE8AC", "Logout", UiFactory.Brush("#FF4444"), UiFactory.Brush("#FF4444"), (_, _) => _logout()));
         border.Child = stack;
@@ -261,17 +125,9 @@ public partial class CustomerShellView : UserControl
         return button;
     }
 
-    private Button CreateTopNavButton(string text, bool active, RoutedEventHandler onClick)
+    private Button CreateTopNavButton(string text, bool active)
     {
-        var button = new Button { Content = text, Margin = new Thickness(active ? 0 : 12, 0, 0, 0), Padding = new Thickness(22, 14, 22, 14), Background = active ? UiFactory.Brush("#E0F8FF") : Brushes.Transparent, Foreground = active ? UiFactory.Brush("#069ED0") : UiFactory.Brush("#58759D"), FontFamily = UiFactory.Font("Bahnschrift SemiBold"), FontSize = 17, BorderThickness = new Thickness(0), Cursor = System.Windows.Input.Cursors.Hand, Template = UiFactory.RoundedButtonTemplate(12) };
-        button.Click += onClick;
-        return button;
+        return new Button { Content = text, Margin = new Thickness(active ? 0 : 12, 0, 0, 0), Padding = new Thickness(22, 14, 22, 14), Background = active ? UiFactory.Brush("#E0F8FF") : Brushes.Transparent, Foreground = active ? UiFactory.Brush("#069ED0") : UiFactory.Brush("#58759D"), FontFamily = UiFactory.Font("Bahnschrift SemiBold"), FontSize = 17, BorderThickness = new Thickness(0), Cursor = System.Windows.Input.Cursors.Hand, Template = UiFactory.RoundedButtonTemplate(12) };
     }
 }
-
-
-
-
-
-
 

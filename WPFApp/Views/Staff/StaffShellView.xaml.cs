@@ -4,8 +4,6 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Media;
-using Services.Implementations;
-using Services.Interfaces;
 using Services.Models;
 using WPFApp.Views.Shared;
 
@@ -14,14 +12,10 @@ namespace WPFApp.Views.Staff;
 public partial class StaffShellView : UserControl
 {
     private readonly Action _logout;
-    private readonly IProfileService _profileService = new ProfileService();
-    private readonly AuthenticatedUser _user;
-    private ContentControl _contentHost = null!;
 
     public StaffShellView(AuthenticatedUser user, Action logout)
     {
         InitializeComponent();
-        _user = user;
         _logout = logout;
         BuildLayout(user);
     }
@@ -54,7 +48,7 @@ public partial class StaffShellView : UserControl
 
         var accountHost = new Grid { Margin = new Thickness(14, 0, 14, 18) };
         var avatar = string.IsNullOrWhiteSpace(user.FullName) ? "S" : user.FullName.Trim()[0].ToString().ToUpperInvariant();
-        var accountButton = UiFactory.CreateAccountButton(_user.FullName, _user.Role, avatar);
+        var accountButton = UiFactory.CreateAccountButton(user.FullName, user.Role, avatar);
         var popup = CreateAccountPopup();
         popup.PlacementTarget = accountButton;
         popup.Placement = PlacementMode.Top;
@@ -69,139 +63,18 @@ public partial class StaffShellView : UserControl
         content.RowDefinitions.Add(new RowDefinition { Height = new GridLength(70) });
         content.RowDefinitions.Add(new RowDefinition());
         Grid.SetColumn(content, 1);
-
         var topBar = new Border { Background = Brushes.White, BorderBrush = UiFactory.Brush("#E2EAF3"), BorderThickness = new Thickness(0, 0, 0, 1) };
         topBar.Child = new TextBlock { Margin = new Thickness(28, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, FontFamily = UiFactory.Font("Bahnschrift SemiBold"), FontSize = 18, Foreground = UiFactory.Brush("#8B9FC0"), Text = "SYSTEM / STAFF WORKSPACE" };
         content.Children.Add(topBar);
-
-        _contentHost = new ContentControl();
-        Grid.SetRow(_contentHost, 1);
-        content.Children.Add(_contentHost);
-        root.Children.Add(content);
-
-        RootHost.Children.Add(root);
-        ShowWorkspace();
-    }
-
-    private void ShowWorkspace()
-    {
         var body = new StackPanel { Margin = new Thickness(30, 26, 30, 26) };
         body.Children.Add(new TextBlock { Text = "Staff Workspace", FontFamily = UiFactory.Font("Bahnschrift SemiBold"), FontSize = 36, Foreground = UiFactory.Brush("#19345C") });
         body.Children.Add(new TextBlock { Margin = new Thickness(0, 12, 0, 0), Text = "This workspace is ready for feature teams to plug stock, product, and order modules into the staff area.", FontFamily = UiFactory.Font("Bahnschrift"), FontSize = 18, Foreground = UiFactory.Brush("#748CAF") });
         body.Children.Add(new Border { Margin = new Thickness(0, 30, 0, 0), Height = 460, Background = Brushes.White, CornerRadius = new CornerRadius(18), BorderBrush = UiFactory.Brush("#DFE8F2"), BorderThickness = new Thickness(1), Child = new TextBlock { Text = "Workspace ready for module implementation", FontFamily = UiFactory.Font("Bahnschrift"), FontSize = 26, Foreground = UiFactory.Brush("#A5B5CB"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center } });
-        _contentHost.Content = body;
-    }
+        Grid.SetRow(body, 1);
+        content.Children.Add(body);
+        root.Children.Add(content);
 
-    private void ShowProfile()
-    {
-        var host = new Grid { Margin = new Thickness(26, 22, 26, 22) };
-        var card = ProfileViewFactory.CreateProfileCard(
-            _user,
-            () => ShowEditProfile(),
-            () => ShowChangePassword(),
-            UiFactory.Brush("#ECF3FF"),
-            UiFactory.Brush("#4E73C7"));
-        host.Children.Add(card);
-        _contentHost.Content = host;
-    }
-
-    private void ShowEditProfile(string? message = null, bool isError = false)
-    {
-        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        var host = new Grid { Margin = new Thickness(22, 18, 22, 18) };
-        var card = ProfileViewFactory.CreateEditProfileCard(
-            _user,
-            ShowProfile,
-            SaveProfile,
-            message,
-            isError);
-        card.Width = 960;
-        card.MaxWidth = 960;
-        card.HorizontalAlignment = HorizontalAlignment.Center;
-        card.VerticalAlignment = VerticalAlignment.Top;
-        host.Children.Add(card);
-        scroll.Content = host;
-        _contentHost.Content = scroll;
-    }
-
-    private void ShowChangePassword(string? message = null, bool isError = false, string currentPassword = "", string newPassword = "", string confirmNewPassword = "")
-    {
-        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        var host = new Grid { Margin = new Thickness(22, 18, 22, 18) };
-        var card = ProfileViewFactory.CreateChangePasswordCard(
-            ShowProfile,
-            SavePassword,
-            message,
-            isError,
-            currentPassword,
-            newPassword,
-            confirmNewPassword);
-        card.Width = 960;
-        card.MaxWidth = 960;
-        card.HorizontalAlignment = HorizontalAlignment.Center;
-        card.VerticalAlignment = VerticalAlignment.Top;
-        host.Children.Add(card);
-        scroll.Content = host;
-        _contentHost.Content = scroll;
-    }
-
-    private void SaveProfile(string fullName, string phone)
-    {
-        var result = _profileService.UpdateProfile(new UpdateProfileRequest
-        {
-            UserId = _user.UserId,
-            Role = _user.Role,
-            FullName = fullName,
-            Phone = phone
-        });
-
-        if (!result.Success)
-        {
-            ShowEditProfile(result.Message, true);
-            return;
-        }
-
-        if (result.UpdatedUser is not null)
-        {
-            ApplyUpdatedUser(result.UpdatedUser);
-        }
-
-        ReloadLayout(ShowProfile);
-    }
-
-    private void SavePassword(string currentPassword, string newPassword, string confirmNewPassword)
-    {
-        var result = _profileService.ChangePassword(new UpdatePasswordRequest
-        {
-            UserId = _user.UserId,
-            Role = _user.Role,
-            CurrentPassword = currentPassword,
-            NewPassword = newPassword,
-            ConfirmNewPassword = confirmNewPassword
-        });
-
-        if (!result.Success)
-        {
-            ShowChangePassword(result.Message, true, currentPassword, newPassword, confirmNewPassword);
-            return;
-        }
-
-        ShowChangePassword(result.Message, false);
-    }
-
-    private void ApplyUpdatedUser(AuthenticatedUser updatedUser)
-    {
-        _user.FullName = updatedUser.FullName;
-        _user.Phone = updatedUser.Phone;
-        _user.Status = updatedUser.Status;
-        _user.Email = updatedUser.Email;
-    }
-
-    private void ReloadLayout(Action nextView)
-    {
-        RootHost.Children.Clear();
-        BuildLayout(_user);
-        nextView();
+        RootHost.Children.Add(root);
     }
 
     private Popup CreateAccountPopup()
@@ -209,11 +82,7 @@ public partial class StaffShellView : UserControl
         var popup = new Popup { AllowsTransparency = true, StaysOpen = false };
         var border = new Border { Width = 230, Padding = new Thickness(18), Background = Brushes.White, CornerRadius = new CornerRadius(14), BorderBrush = UiFactory.Brush("#E5ECF5"), BorderThickness = new Thickness(1) };
         var stack = new StackPanel();
-        stack.Children.Add(CreatePopupAction("\uE77B", "Your Profile", UiFactory.Brush("#445D84"), UiFactory.Brush("#7D95B5"), (_, _) =>
-        {
-            popup.IsOpen = false;
-            ShowProfile();
-        }));
+        stack.Children.Add(CreatePopupAction("\uE77B", "Your Profile", UiFactory.Brush("#445D84"), UiFactory.Brush("#7D95B5"), (_, _) => MessageBox.Show("Profile screen is not connected yet.")));
         stack.Children.Add(new Border { Height = 1, Background = UiFactory.Brush("#EEF2F7"), Margin = new Thickness(0, 8, 0, 8) });
         stack.Children.Add(CreatePopupAction("\uE8AC", "Logout", UiFactory.Brush("#FF4444"), UiFactory.Brush("#FF4444"), (_, _) => _logout()));
         border.Child = stack;
@@ -232,10 +101,6 @@ public partial class StaffShellView : UserControl
         return button;
     }
 }
-
-
-
-
 
 
 
