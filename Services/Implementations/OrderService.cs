@@ -1,9 +1,8 @@
 ﻿using BusinessObjects;
-using Repositories;
 using Repositories.Interfaces;
 using Services.Interfaces;
 using Repositories.Implementations;
-using Repositories.Interfaces;
+
 namespace Services.Implementations
 {
     public class OrderService : IOrderService
@@ -56,8 +55,10 @@ namespace Services.Implementations
             if (order == null)
                 throw new ArgumentNullException(nameof(order));
 
-            if (order.CustomerId <= 0)
-                throw new Exception("Customer không hợp lệ.");
+            // CustomerId optional: có thể null nếu là guest order
+
+            if (order.StaffId == null || order.StaffId <= 0)
+                throw new Exception("Staff ID không hợp lệ.");
 
             if (string.IsNullOrWhiteSpace(order.ReceiverName))
                 throw new Exception("Tên người nhận không được để trống.");
@@ -101,7 +102,6 @@ namespace Services.Implementations
             order.Status = "Pending";
             order.ProcessedAt = null;
             order.PaidAt = null;
-            order.StaffId = null;
 
             _orderRepository.AddOrder(order);
 
@@ -130,6 +130,10 @@ namespace Services.Implementations
 
             if (string.IsNullOrWhiteSpace(status))
                 throw new Exception("Trạng thái không được để trống.");
+
+            var validStatuses = new List<string> { "Pending", "Processing", "Completed", "Cancelled" };
+            if (!validStatuses.Contains(status.Trim()))
+                throw new Exception("Trạng thái không hợp lệ.");
 
             _orderRepository.UpdateOrderStatus(orderId, status.Trim());
         }
