@@ -57,4 +57,15 @@ public class CustomerRepository : ICustomerRepository
         context.Customers.Update(customer);
         context.SaveChanges();
     }
+
+    public void UpdateCustomerStatus(int customerId, string status)
+{
+    using var context = new IPhoneInventoryDbContext();
+    var customer = context.Customers.FirstOrDefault(x => x.CustomerId == customerId);
+
+    if (customer == null) return;
+
+    customer.Status = status;
+    context.SaveChanges();
+}
 }

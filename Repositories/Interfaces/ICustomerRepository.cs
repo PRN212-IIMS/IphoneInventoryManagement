@@ -16,5 +16,6 @@ namespace Repositories.Interfaces
         List<Customer> SearchCustomers(string keyword);
         void AddCustomer(Customer customer);
         void UpdateCustomer(Customer customer);
+        void UpdateCustomerStatus(int customerId, string status);
     }
 }
