@@ -132,11 +132,23 @@ namespace Services.Implementations
             if (string.IsNullOrWhiteSpace(status))
                 throw new Exception("Trạng thái không được để trống.");
 
+            status = status.Trim();
+
             var validStatuses = new List<string> { "Pending", "Processing", "Completed", "Cancelled" };
-            if (!validStatuses.Contains(status.Trim()))
+            if (!validStatuses.Contains(status))
                 throw new Exception("Trạng thái không hợp lệ.");
 
-            _orderRepository.UpdateOrderStatus(orderId, status.Trim());
+            var order = _orderRepository.GetOrderById(orderId);
+            if (order == null)
+                throw new Exception("Không tìm thấy đơn hàng.");
+
+            if (string.Equals(order.Status, "Completed", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(order.Status, "Cancelled", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new Exception($"Order đang ở trạng thái '{order.Status}' nên không thể thay đổi nữa.");
+            }
+
+            _orderRepository.UpdateOrderStatus(orderId, status);
         }
 
         public void CancelOrder(int orderId, int customerId)
