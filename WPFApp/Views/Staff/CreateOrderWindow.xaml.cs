@@ -1,11 +1,12 @@
-﻿using System;
+﻿using BusinessObjects;
+using Microsoft.VisualBasic.ApplicationServices;
+using Services.Implementations;
+using Services.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using BusinessObjects;
-using Services.Implementations;
-using Services.Interfaces;
 using WPFApp.ViewModels;
 using CustomerEntity = BusinessObjects.Customer;
 
@@ -36,28 +37,10 @@ namespace WPFApp.Views.Staff
 
         private void LoadCustomers()
         {
-            var customerOptions = new List<CustomerOptionItem>
-    {
-        new CustomerOptionItem
-        {
-            CustomerId = null,
-            FullName = "Guest / No Customer"
-        }
-    };
-
-            customerOptions.AddRange(
-                _customerService.GetAllCustomers()
-                    .Select(c => new CustomerOptionItem
-                    {
-                        CustomerId = c.CustomerId,
-                        FullName = c.FullName
-                    })
-            );
-
-            cbCustomers.ItemsSource = customerOptions;
+            cbCustomers.ItemsSource = _customerService.GetAllCustomers().ToList();
             cbCustomers.DisplayMemberPath = "FullName";
             cbCustomers.SelectedValuePath = "CustomerId";
-            cbCustomers.SelectedIndex = 0;
+            cbCustomers.SelectedIndex = -1;
         }
 
         private void LoadProducts()
@@ -169,7 +152,7 @@ namespace WPFApp.Views.Staff
                     return;
                 }
 
-                CustomerOptionItem? selectedCustomer = cbCustomers.SelectedItem as CustomerOptionItem;
+                CustomerEntity? selectedCustomer = cbCustomers.SelectedItem as CustomerEntity;
 
                 var order = new Order
                 {
@@ -205,10 +188,19 @@ namespace WPFApp.Views.Staff
             DialogResult = false;
             Close();
         }
-        public class CustomerOptionItem
+
+        private void cbCustomers_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            public int? CustomerId { get; set; }
-            public string FullName { get; set; } = string.Empty;
+            if (cbCustomers.SelectedItem is CustomerEntity selectedCustomer)
+            {
+                txtReceiverName.Text = selectedCustomer.FullName ?? "";
+                txtReceiverPhone.Text = selectedCustomer.Phone ?? "";
+            }
+            else
+            {
+                txtReceiverName.Clear();
+                txtReceiverPhone.Clear();
+            }
         }
     }
 }

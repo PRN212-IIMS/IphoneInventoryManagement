@@ -51,7 +51,9 @@
                           Height="32"
                           Margin="0,0,12,0"
                           DisplayMemberPath="FullName"
-                          SelectedValuePath="CustomerId"/>
+                          SelectedValuePath="CustomerId"
+                          SelectionChanged="cbCustomers_SelectionChanged"
+                          />
 
                 <TextBlock Grid.Row="0" Grid.Column="2"
                            Text="Receiver Name:"
