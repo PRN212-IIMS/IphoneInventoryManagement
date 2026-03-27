@@ -249,15 +249,7 @@ namespace Services.Implementations
 
         private static bool IsValidEmail(string email)
         {
-            try
-            {
-                _ = new MailAddress(email);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
         }
 
         private static bool IsValidPhone(string phone)
