@@ -27,6 +27,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
+                
             </Grid.ColumnDefinitions>
 
             <TextBox x:Name="txtSearch"
@@ -91,7 +92,7 @@
                       CanUserAddRows="False"
                       HeadersVisibility="Column"
                       GridLinesVisibility="Horizontal"
-                      RowHeight="36"
+                      RowHeight="100"
                       ColumnHeaderHeight="36"
                       SelectionMode="Single"
                       SelectionUnit="FullRow">
@@ -115,14 +116,15 @@
                     <DataGridTextColumn Header="Storage"
                                         Binding="{Binding StorageCapacity}"
                                         Width="110"/>
-                    <DataGridTemplateColumn Header="UrlImage" Width="100">
+                    <DataGridTemplateColumn Header="Image" Width="120">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding UrlImages}"
-                       TextTrimming="CharacterEllipsis"
-                       TextWrapping="NoWrap"
-                       ToolTip="{Binding UrlImages}"
-                       VerticalAlignment="Center"/>
+                                <Border BorderBrush="#DDD" BorderThickness="1" CornerRadius="4" Padding="2">
+                                    <Image Source="{Binding UrlImages}"
+                       Width="80"
+                       Height="100"
+                       Stretch="UniformToFill"/>
+                                </Border>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>

@@ -205,6 +205,7 @@ namespace WPFApp.Views.Customer
                     Model = GetStringValue(selected, "Model"),
                     Color = GetStringValue(selected, "Color"),
                     StorageCapacity = GetStringValue(selected, "StorageCapacity", "Storage"),
+                    Quantity = 1,
                     UnitPrice = GetDecimalValue(selected, "Price", "UnitPrice")
                 };
 
