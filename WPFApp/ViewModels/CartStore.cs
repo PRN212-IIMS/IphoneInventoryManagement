@@ -13,7 +13,6 @@ namespace WPFApp
             if (existing != null)
             {
                 existing.Quantity += item.Quantity;
-                existing.LineTotal = existing.Quantity * existing.UnitPrice;
             }
             else
             {
@@ -31,7 +30,7 @@ namespace WPFApp
 
         public static decimal GetTotalAmount()
         {
-            return Items.Sum(x => x.LineTotal);
+            return Items.Sum(x => x.Total);
         }
 
         public static void Clear()

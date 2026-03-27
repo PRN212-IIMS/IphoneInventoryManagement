@@ -21,4 +21,11 @@
 		</None>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Page Update="Views\Customer\OrderHistoryView.xaml">
+	    <Generator></Generator>
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Page>
+	</ItemGroup>
+
 </Project>

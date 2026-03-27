@@ -143,9 +143,7 @@
                             <DataGridTextColumn Header="Unit Price"
                                                 Binding="{Binding UnitPrice, StringFormat={}{0:N0}}"
                                                 Width="105"/>
-                            <DataGridTextColumn Header="Total"
-                                                Binding="{Binding LineTotal, StringFormat={}{0:N0}}"
-                                                Width="95"/>
+                            <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=N0}" Width="1.1*"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>
