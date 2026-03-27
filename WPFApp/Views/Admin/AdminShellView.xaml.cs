@@ -4,6 +4,9 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Media;
+using BusinessObjects;
+using Services.Implementations;
+using Services.Interfaces;
 using Services.Models;
 using WPFApp.Views.Shared;
 
@@ -12,6 +15,14 @@ namespace WPFApp.Views.Admin;
 public partial class AdminShellView : UserControl
 {
     private readonly Action _logout;
+    private readonly IStaffService _staffService = new StaffService();
+    private readonly IProductService _productService = new ProductService();
+    private ContentControl _contentHost = null!;
+    private Button _menuAccounts = null!;
+    private Button _menuProducts = null!;
+    private TextBlock _breadcrumb = null!;
+    private TextBlock _title = null!;
+    private TextBlock _subtitle = null!;
 
     public AdminShellView(AuthenticatedUser user, Action logout)
     {
@@ -22,7 +33,7 @@ public partial class AdminShellView : UserControl
 
     private void BuildLayout(AuthenticatedUser user)
     {
-        var displayName = "System Admin";
+        var displayName = string.IsNullOrWhiteSpace(user.FullName) ? "System Admin" : user.FullName;
         var displayRole = "Admin";
 
         var root = new Grid { Background = UiFactory.Brush("#F3F7FC") };
@@ -31,18 +42,17 @@ public partial class AdminShellView : UserControl
 
         var sidebar = BuildSidebar("Admin", new[]
         {
-            ("\uE716", "Account List", true),
-            ("\uE710", "Create Account", false),
+            ("\uE716", "Staff Accounts", true),
             ("\uE8EF", "Product List", false),
-            ("\uE719", "Create Product", false),
         }, displayName, displayRole, "S", false);
         root.Children.Add(sidebar);
 
-        var content = BuildContent("SYSTEM / ACCOUNT LIST", "Account Management", "This layout is ready for feature teams to plug account management content into the main workspace.");
+        var content = BuildContent();
         Grid.SetColumn(content, 1);
         root.Children.Add(content);
 
         RootHost.Children.Add(root);
+        ShowStaffAccountsScreen();
     }
 
     private Grid BuildSidebar(string roleLabel, (string Icon, string Text, bool Active)[] menuItems, string userName, string userRole, string avatar, bool includeProfile)
@@ -61,10 +71,12 @@ public partial class AdminShellView : UserControl
         sidebar.Children.Add(brand);
 
         var menuStack = new StackPanel { Margin = new Thickness(14, 36, 14, 0), VerticalAlignment = VerticalAlignment.Top };
-        foreach (var item in menuItems)
-        {
-            menuStack.Children.Add(UiFactory.CreateSidebarMenuButton(item.Icon, item.Text, item.Active));
-        }
+        _menuAccounts = UiFactory.CreateSidebarMenuButton(menuItems[0].Icon, menuItems[0].Text, true);
+        _menuProducts = UiFactory.CreateSidebarMenuButton(menuItems[1].Icon, menuItems[1].Text, false);
+        _menuAccounts.Click += (_, _) => ShowStaffAccountsScreen();
+        _menuProducts.Click += (_, _) => ShowProductsScreen();
+        menuStack.Children.Add(_menuAccounts);
+        menuStack.Children.Add(_menuProducts);
         Grid.SetRow(menuStack, 1);
         sidebar.Children.Add(menuStack);
 
@@ -82,24 +94,181 @@ public partial class AdminShellView : UserControl
         return sidebar;
     }
 
-    private Grid BuildContent(string breadcrumb, string title, string subtitle)
+    private Grid BuildContent()
     {
         var content = new Grid();
-        content.RowDefinitions.Add(new RowDefinition { Height = new GridLength(70) });
+        content.RowDefinitions.Add(new RowDefinition { Height = new GridLength(100) });
         content.RowDefinitions.Add(new RowDefinition());
 
-        var topBar = new Border { Background = Brushes.White, BorderBrush = UiFactory.Brush("#E2EAF3"), BorderThickness = new Thickness(0, 0, 0, 1) };
-        topBar.Child = new TextBlock { Margin = new Thickness(28, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center, FontFamily = UiFactory.Font("Bahnschrift SemiBold"), FontSize = 18, Foreground = UiFactory.Brush("#8B9FC0"), Text = breadcrumb };
-        content.Children.Add(topBar);
+        var topPanel = new StackPanel { Margin = new Thickness(28, 16, 28, 8) };
+        _breadcrumb = new TextBlock { FontFamily = UiFactory.Font("Bahnschrift SemiBold"), FontSize = 15, Foreground = UiFactory.Brush("#8B9FC0"), Text = "SYSTEM / ADMIN WORKSPACE" };
+        _title = new TextBlock { Margin = new Thickness(0, 6, 0, 0), FontFamily = UiFactory.Font("Bahnschrift SemiBold"), FontSize = 30, Foreground = UiFactory.Brush("#19345C"), Text = "Staff Accounts" };
+        _subtitle = new TextBlock { Margin = new Thickness(0, 6, 0, 0), FontFamily = UiFactory.Font("Bahnschrift"), FontSize = 15, Foreground = UiFactory.Brush("#748CAF"), Text = "Create and manage staff accounts." };
+        topPanel.Children.Add(_breadcrumb);
+        topPanel.Children.Add(_title);
+        topPanel.Children.Add(_subtitle);
+        content.Children.Add(topPanel);
 
-        var body = new StackPanel { Margin = new Thickness(30, 26, 30, 26) };
-        body.Children.Add(new TextBlock { Text = title, FontFamily = UiFactory.Font("Bahnschrift SemiBold"), FontSize = 36, Foreground = UiFactory.Brush("#19345C") });
-        body.Children.Add(new TextBlock { Margin = new Thickness(0, 12, 0, 0), Text = subtitle, FontFamily = UiFactory.Font("Bahnschrift"), FontSize = 18, Foreground = UiFactory.Brush("#748CAF") });
-        body.Children.Add(new Border { Margin = new Thickness(0, 30, 0, 0), Height = 460, Background = Brushes.White, CornerRadius = new CornerRadius(18), BorderBrush = UiFactory.Brush("#DFE8F2"), BorderThickness = new Thickness(1), Child = new TextBlock { Text = "Workspace ready for module implementation", FontFamily = UiFactory.Font("Bahnschrift"), FontSize = 26, Foreground = UiFactory.Brush("#A5B5CB"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center } });
-        Grid.SetRow(body, 1);
-        content.Children.Add(body);
+        _contentHost = new ContentControl { Margin = new Thickness(28, 8, 28, 24) };
+        Grid.SetRow(_contentHost, 1);
+        content.Children.Add(_contentHost);
 
         return content;
+    }
+
+    private void ShowStaffAccountsScreen()
+    {
+        SetMenuState(_menuAccounts);
+        _title.Text = "Staff Accounts";
+        _subtitle.Text = "Admin can create staff account and update active status.";
+
+        var host = new Grid();
+        host.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        host.RowDefinitions.Add(new RowDefinition());
+
+        var actionRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 12) };
+        var createButton = UiFactory.CreateButton("Create Staff Account", UiFactory.Brush("#2563EB"), Brushes.White, 34);
+        createButton.Width = 170;
+        actionRow.Children.Add(createButton);
+        host.Children.Add(actionRow);
+
+        var grid = new DataGrid
+        {
+            AutoGenerateColumns = false,
+            IsReadOnly = true,
+            HeadersVisibility = DataGridHeadersVisibility.Column,
+            SelectionMode = DataGridSelectionMode.Single
+        };
+        grid.Columns.Add(new DataGridTextColumn { Header = "ID", Binding = new System.Windows.Data.Binding("StaffId"), Width = 70 });
+        grid.Columns.Add(new DataGridTextColumn { Header = "Full Name", Binding = new System.Windows.Data.Binding("FullName"), Width = 200 });
+        grid.Columns.Add(new DataGridTextColumn { Header = "Email", Binding = new System.Windows.Data.Binding("Email"), Width = 220 });
+        grid.Columns.Add(new DataGridTextColumn { Header = "Phone", Binding = new System.Windows.Data.Binding("Phone"), Width = 130 });
+        grid.Columns.Add(new DataGridTextColumn { Header = "Status", Binding = new System.Windows.Data.Binding("Status"), Width = 100 });
+        Grid.SetRow(grid, 1);
+        host.Children.Add(grid);
+
+        void LoadStaff() => grid.ItemsSource = _staffService.GetAllStaff();
+        LoadStaff();
+
+        createButton.Click += (_, _) => ShowCreateStaffDialog(LoadStaff);
+        grid.MouseDoubleClick += (_, _) =>
+        {
+            if (grid.SelectedItem is BusinessObjects.Staff selected)
+            {
+                var newStatus = selected.Status == "Active" ? "Inactive" : "Active";
+                try
+                {
+                    _staffService.ChangeStaffStatus(selected.StaffId, newStatus);
+                    LoadStaff();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        };
+
+        _contentHost.Content = host;
+    }
+
+    private void ShowProductsScreen()
+    {
+        SetMenuState(_menuProducts);
+        _title.Text = "Product List";
+        _subtitle.Text = "Admin can view products.";
+
+        var grid = new DataGrid
+        {
+            AutoGenerateColumns = false,
+            IsReadOnly = true,
+            HeadersVisibility = DataGridHeadersVisibility.Column
+        };
+        grid.Columns.Add(new DataGridTextColumn { Header = "ID", Binding = new System.Windows.Data.Binding("ProductId"), Width = 70 });
+        var imageColumn = new DataGridTemplateColumn { Header = "Image", Width = 90 };
+        var imageBorderFactory = new FrameworkElementFactory(typeof(Border));
+        imageBorderFactory.SetValue(Border.WidthProperty, 56.0);
+        imageBorderFactory.SetValue(Border.HeightProperty, 56.0);
+        imageBorderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(6));
+        imageBorderFactory.SetValue(Border.BorderBrushProperty, UiFactory.Brush("#E2E8F0"));
+        imageBorderFactory.SetValue(Border.BorderThicknessProperty, new Thickness(1));
+        imageBorderFactory.SetValue(Border.BackgroundProperty, UiFactory.Brush("#F8FAFC"));
+
+        var imageFactory = new FrameworkElementFactory(typeof(Image));
+        imageFactory.SetValue(Image.StretchProperty, Stretch.UniformToFill);
+        imageFactory.SetBinding(Image.SourceProperty, new System.Windows.Data.Binding("UrlImages"));
+        imageBorderFactory.AppendChild(imageFactory);
+        imageColumn.CellTemplate = new DataTemplate { VisualTree = imageBorderFactory };
+        grid.Columns.Add(imageColumn);
+        grid.Columns.Add(new DataGridTextColumn { Header = "Name", Binding = new System.Windows.Data.Binding("ProductName"), Width = 180 });
+        grid.Columns.Add(new DataGridTextColumn { Header = "Model", Binding = new System.Windows.Data.Binding("Model"), Width = 120 });
+        grid.Columns.Add(new DataGridTextColumn { Header = "Price", Binding = new System.Windows.Data.Binding("Price"), Width = 110 });
+        grid.Columns.Add(new DataGridTextColumn { Header = "Stock", Binding = new System.Windows.Data.Binding("StockQuantity"), Width = 90 });
+        grid.Columns.Add(new DataGridTextColumn { Header = "Status", Binding = new System.Windows.Data.Binding("Status"), Width = 90 });
+        grid.ItemsSource = _productService.GetAllProducts();
+        _contentHost.Content = grid;
+    }
+
+    private void ShowCreateStaffDialog(Action onCreated)
+    {
+        var dialog = new Window
+        {
+            Title = "Create Staff Account",
+            Width = 420,
+            Height = 420,
+            WindowStartupLocation = WindowStartupLocation.CenterScreen,
+            ResizeMode = ResizeMode.NoResize
+        };
+
+        var panel = new StackPanel { Margin = new Thickness(16) };
+        var fullNameBox = new TextBox { Height = 34 };
+        var emailBox = new TextBox { Height = 34 };
+        var phoneBox = new TextBox { Height = 34 };
+        var passwordBox = new PasswordBox { Height = 34 };
+        panel.Children.Add(CreateFormField("Full Name", fullNameBox));
+        panel.Children.Add(CreateFormField("Email", emailBox));
+        panel.Children.Add(CreateFormField("Phone", phoneBox));
+        panel.Children.Add(CreateFormField("Password", passwordBox));
+
+        var saveButton = UiFactory.CreateButton("Create", UiFactory.Brush("#2563EB"), Brushes.White, 34);
+        saveButton.Margin = new Thickness(0, 10, 0, 0);
+        saveButton.Click += (_, _) =>
+        {
+            try
+            {
+                _staffService.CreateStaff(new BusinessObjects.Staff
+                {
+                    FullName = fullNameBox.Text.Trim(),
+                    Email = emailBox.Text.Trim(),
+                    Phone = phoneBox.Text.Trim(),
+                    Password = passwordBox.Password,
+                    Status = "Active"
+                });
+                onCreated();
+                dialog.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        };
+        panel.Children.Add(saveButton);
+        dialog.Content = panel;
+        dialog.ShowDialog();
+    }
+
+    private static FrameworkElement CreateFormField(string label, FrameworkElement input)
+    {
+        var panel = new StackPanel { Margin = new Thickness(0, 0, 0, 10) };
+        panel.Children.Add(new TextBlock { Text = label, Margin = new Thickness(0, 0, 0, 4) });
+        panel.Children.Add(input);
+        return panel;
+    }
+
+    private void SetMenuState(Button activeButton)
+    {
+        _menuAccounts.Background = Brushes.Transparent;
+        _menuProducts.Background = Brushes.Transparent;
+        activeButton.Background = UiFactory.Brush("#1F3258");
     }
 
     private Popup CreateAccountPopup(bool includeProfile)

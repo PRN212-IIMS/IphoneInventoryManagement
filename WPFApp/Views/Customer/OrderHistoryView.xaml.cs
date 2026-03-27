@@ -1,27 +1,25 @@
-﻿using BusinessObjects;
-using Services;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
+using BusinessObjects;
+using Services.Implementations;
 
-namespace WPFApp
+namespace WPFApp.Views.Customer
 {
-    public partial class OrderHistoryWindow : Window
+    public partial class OrderHistoryView : UserControl
     {
-        private readonly OrderService _orderService;
         private readonly int _customerId;
 
-        public OrderHistoryWindow(int customerId)
+        public OrderHistoryView(int customerId)
         {
             InitializeComponent();
-            _orderService = new OrderService();
             _customerId = customerId;
-
             LoadOrders();
         }
 
         private void LoadOrders()
         {
-            dgOrders.ItemsSource = _orderService.GetOrdersByCustomerId(_customerId);
+            var orderService = new OrderService();
+            dgOrders.ItemsSource = orderService.GetOrdersByCustomerId(_customerId);
         }
 
         private void Refresh_Click(object sender, RoutedEventArgs e)
@@ -39,8 +37,16 @@ namespace WPFApp
             }
 
             OrderDetailWindow window = new OrderDetailWindow(_customerId, selected.OrderId);
-            window.ShowDialog();
-            LoadOrders();
+            bool? result = window.ShowDialog();
+
+            if (result == true)
+            {
+                LoadOrders();
+            }
+            else
+            {
+                LoadOrders();
+            }
         }
 
         private void CancelOrder_Click(object sender, RoutedEventArgs e)
@@ -54,7 +60,8 @@ namespace WPFApp
                     return;
                 }
 
-                _orderService.CancelOrder(selected.OrderId, _customerId);
+                var orderService = new OrderService();
+                orderService.CancelOrder(selected.OrderId, _customerId);
                 MessageBox.Show("Order cancelled successfully.");
                 LoadOrders();
             }

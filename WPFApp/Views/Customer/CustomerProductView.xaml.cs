@@ -1,20 +1,24 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 using BusinessObjects;
-using Services;
+using Services.Implementations;
 
-namespace WPFApp
+namespace WPFApp.Views.Customer
 {
-    public partial class CustomerProductWindow : Window
+    public partial class CustomerProductView : UserControl
     {
         private readonly ProductService _productService;
         private readonly int _customerId;
+        private readonly Action _openCheckout;
 
-        public CustomerProductWindow(int customerId)
+        public CustomerProductView(int customerId, Action openCheckout)
         {
             InitializeComponent();
             _productService = new ProductService();
             _customerId = customerId;
+            _openCheckout = openCheckout;
 
             LoadFilters();
             LoadProducts();
@@ -77,8 +81,8 @@ namespace WPFApp
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 filtered = filtered.Where(p =>
-                        p.ProductName.Contains(keyword, System.StringComparison.OrdinalIgnoreCase) ||
-                        (!string.IsNullOrWhiteSpace(p.Model) && p.Model.Contains(keyword, System.StringComparison.OrdinalIgnoreCase)))
+                        p.ProductName.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                        (!string.IsNullOrWhiteSpace(p.Model) && p.Model.Contains(keyword, StringComparison.OrdinalIgnoreCase)))
                     .ToList();
             }
 
@@ -132,7 +136,7 @@ namespace WPFApp
                 UpdateCartStatus();
                 MessageBox.Show("Added to cart successfully.");
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
@@ -140,10 +144,7 @@ namespace WPFApp
 
         private void OpenCheckout_Click(object sender, RoutedEventArgs e)
         {
-            CreateOrderWindow window = new CreateOrderWindow(_customerId);
-            window.ShowDialog();
-            UpdateCartStatus();
-            LoadProducts();
+            _openCheckout?.Invoke();
         }
     }
 }
