@@ -94,6 +94,16 @@ namespace WPFApp.Views.Staff
         {
             if (((FrameworkElement)sender).DataContext is Order order)
             {
+                if (string.Equals(order.Status, "Completed", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(order.Status, "Cancelled", StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show($"Order đang ở trạng thái '{order.Status}' nên không thể thay đổi nữa.",
+                            "Cannot Update",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning);
+                    return;
+                }
+
                 var window = new UpdateOrderStatusWindow(order.Status ?? "Pending")
                 {
                     Owner = Window.GetWindow(this)
