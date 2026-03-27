@@ -12,8 +12,9 @@ namespace Services.Interfaces
         List<Staff> GetAllStaff();
         Staff? GetStaffById(int id);
         List<Staff> SearchStaff(string keyword);
-        void CreateStaff(Staff staff);
-        void UpdateStaff(Staff staff);
-        void ChangeStaffStatus(int staffId, string status);
+        List<Staff> FilterStaff(string? keyword, string? status);
+        bool CreateStaff(Staff staff, out string message);
+        bool UpdateStaff(Staff staff, out string message);
+        bool ChangeStaffStatus(int staffId, string status, out string message);
     }
 }

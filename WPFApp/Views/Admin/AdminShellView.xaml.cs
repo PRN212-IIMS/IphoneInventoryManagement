@@ -6,12 +6,14 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using Services.Models;
 using WPFApp.Views.Shared;
+using WPFApp.Views.Admin;
 
 namespace WPFApp.Views.Admin;
 
 public partial class AdminShellView : UserControl
 {
     private readonly Action _logout;
+    private ContentControl _mainContentHost = null!;
 
     public AdminShellView(AuthenticatedUser user, Action logout)
     {
@@ -31,16 +33,18 @@ public partial class AdminShellView : UserControl
 
         var sidebar = BuildSidebar("Admin", new[]
         {
-            ("\uE716", "Account List", true),
-            ("\uE710", "Create Account", false),
-            ("\uE8EF", "Product List", false),
-            ("\uE719", "Create Product", false),
-        }, displayName, displayRole, "S", false);
+        ("\uE716", "Account List", true),
+        ("\uE710", "Create Account", false),
+        ("\uE8EF", "Product List", false),
+        ("\uE719", "Create Product", false),
+    }, displayName, displayRole, "S", false);
         root.Children.Add(sidebar);
 
-        var content = BuildContent("SYSTEM / ACCOUNT LIST", "Account Management", "This layout is ready for feature teams to plug account management content into the main workspace.");
-        Grid.SetColumn(content, 1);
-        root.Children.Add(content);
+        _mainContentHost = new ContentControl();
+        Grid.SetColumn(_mainContentHost, 1);
+        root.Children.Add(_mainContentHost);
+
+        ShowAccountList();
 
         RootHost.Children.Add(root);
     }
@@ -63,7 +67,14 @@ public partial class AdminShellView : UserControl
         var menuStack = new StackPanel { Margin = new Thickness(14, 36, 14, 0), VerticalAlignment = VerticalAlignment.Top };
         foreach (var item in menuItems)
         {
-            menuStack.Children.Add(UiFactory.CreateSidebarMenuButton(item.Icon, item.Text, item.Active));
+            var button = UiFactory.CreateSidebarMenuButton(item.Icon, item.Text, item.Active);
+
+            if (item.Text == "Account List")
+            {
+                button.Click += (_, _) => ShowAccountList();
+            }
+
+            menuStack.Children.Add(button);
         }
         Grid.SetRow(menuStack, 1);
         sidebar.Children.Add(menuStack);
@@ -127,6 +138,11 @@ public partial class AdminShellView : UserControl
         row.Children.Add(new TextBlock { Text = text, FontFamily = UiFactory.Font("Bahnschrift SemiBold"), FontSize = 15, Foreground = textBrush });
         button.Content = row;
         return button;
+    }
+
+    private void ShowAccountList()
+    {
+        _mainContentHost.Content = new AdminAccountListView();
     }
 }
 
