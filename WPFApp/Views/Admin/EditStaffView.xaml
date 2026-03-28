@@ -31,7 +31,7 @@
                 Background="White"
                 MaxWidth="650"
                 HorizontalAlignment="Left"
-                VerticalAlignment="Center" Width="662" Margin="47,0,0,0" Height="526">
+                VerticalAlignment="Center" Width="662" Margin="47,0,0,0" Height="479">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
