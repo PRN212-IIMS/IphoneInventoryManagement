@@ -228,7 +228,6 @@ namespace WPFApp.Views.Staff
                 else
                 {
                     product.ProductId = _editingProduct.ProductId;
-
                     product.StaffId = _editingProduct.StaffId;
 
                     _productService.UpdateProduct(product);
