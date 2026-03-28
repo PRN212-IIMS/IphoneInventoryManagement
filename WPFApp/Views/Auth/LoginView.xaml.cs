@@ -11,7 +11,7 @@ namespace WPFApp.Views.Auth;
 
 public partial class LoginView : UserControl
 {
-    private readonly Func<string, string, AuthenticatedUser?> _authenticate;
+    private readonly Func<string, string, LoginResult> _authenticate;
     private readonly Func<RegisterCustomerRequest, RegisterCustomerResult> _registerCustomer;
     private readonly Action<AuthenticatedUser> _onAuthenticated;
     private Grid _rightPanel = null!;
@@ -23,7 +23,7 @@ public partial class LoginView : UserControl
     private string? _loginInfoMessage;
 
     public LoginView(
-        Func<string, string, AuthenticatedUser?> authenticate,
+        Func<string, string, LoginResult> authenticate,
         Func<RegisterCustomerRequest, RegisterCustomerResult> registerCustomer,
         Action<AuthenticatedUser> onAuthenticated)
     {
@@ -161,15 +161,15 @@ public partial class LoginView : UserControl
                 return;
             }
 
-            var user = _authenticate(email, password);
-            if (user is null)
+            var loginResult = _authenticate(email, password);
+            if (!loginResult.Success || loginResult.User is null)
             {
-                SetError(message, "Invalid credentials or inactive account.");
+                SetError(message, loginResult.Message);
                 return;
             }
 
             message.Text = string.Empty;
-            _onAuthenticated(user);
+            _onAuthenticated(loginResult.User);
         };
         stack.Children.Add(signIn);
 
@@ -559,6 +559,10 @@ public partial class LoginView : UserControl
         textBlock.Text = message;
     }
 }
+
+
+
+
 
 
 

@@ -52,15 +52,21 @@ namespace WPFApp.Views.Staff
                 string? status = cbStatus.SelectedItem?.ToString();
 
                 status = status == "All Status" ? null : status;
+                if (!string.IsNullOrWhiteSpace(keyword) && keyword.Length > 100)
+                {
+                    MessageBox.Show("Search keyword cannot exceed 100 characters.", "Validation",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
-                if (!string.IsNullOrWhiteSpace(keyword))
-                {
-                    dgOrders.ItemsSource = _orderService.SearchOrders(keyword);
-                }
-                else
-                {
-                    dgOrders.ItemsSource = _orderService.FilterOrders(status, null, null);
-                }
+                List<Order> result = string.IsNullOrWhiteSpace(keyword)
+                    ? _orderService.FilterOrders(status, null, null)
+                    : _orderService.SearchOrders(keyword);
+
+                if (!string.IsNullOrWhiteSpace(status))
+                    result = result.FindAll(x => string.Equals(x.Status, status, StringComparison.OrdinalIgnoreCase));
+
+                dgOrders.ItemsSource = result;
 
                 dgOrders.Items.Refresh();
             }
@@ -97,7 +103,7 @@ namespace WPFApp.Views.Staff
                 if (string.Equals(order.Status, "Completed", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(order.Status, "Cancelled", StringComparison.OrdinalIgnoreCase))
                 {
-                    MessageBox.Show($"Order đang ở trạng thái '{order.Status}' nên không thể thay đổi nữa.",
+                    MessageBox.Show($"The order is '{order.Status}' and can no longer be changed.",
                             "Cannot Update",
                             MessageBoxButton.OK,
                             MessageBoxImage.Warning);
