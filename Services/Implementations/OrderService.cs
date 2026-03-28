@@ -8,6 +8,9 @@ namespace Services.Implementations
 {
     public class OrderService : IOrderService
     {
+
+        
+
         private static readonly HashSet<string> ValidStatuses = new(StringComparer.OrdinalIgnoreCase)
         {
             "Pending", "Processing", "Completed", "Cancelled"
@@ -27,6 +30,12 @@ namespace Services.Implementations
         {
             _orderRepository = new OrderRepository();
             _productRepository = new ProductRepository();
+        }
+
+        public OrderService(IOrderRepository orderRepository, IProductRepository productRepository)
+        {
+            _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
+            _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
         }
 
         public List<Order> GetAllOrders()
