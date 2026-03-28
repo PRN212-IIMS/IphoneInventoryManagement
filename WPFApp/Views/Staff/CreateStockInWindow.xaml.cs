@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using BusinessObjects;
@@ -12,6 +14,11 @@ namespace WPFApp.Views.Staff
 {
     public partial class CreateStockInWindow : Window
     {
+        private const int MaxLineQuantity = 1000;
+        private const decimal MinImportPrice = 100000m;
+        private const decimal MaxImportPrice = 100000000m;
+        private const int MaxNoteLength = 500;
+
         private readonly IStockInService _stockInService;
         private readonly IProductService _productService;
         private readonly int _staffId;
@@ -51,29 +58,59 @@ namespace WPFApp.Views.Staff
             {
                 if (cbProducts.SelectedItem is not Product selectedProduct)
                 {
-                    MessageBox.Show("Vui lòng chọn sản phẩm.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Please select a product.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
                 if (!int.TryParse(txtQuantity.Text.Trim(), out int quantity) || quantity <= 0)
                 {
-                    MessageBox.Show("Quantity phải là số nguyên > 0.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Quantity must be an integer greater than 0.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (quantity > MaxLineQuantity)
+                {
+                    MessageBox.Show($"Each line cannot exceed {MaxLineQuantity} units.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
-                decimal importPrice = 0;
-                if (!string.IsNullOrWhiteSpace(txtImportPrice.Text))
+                string importRaw = txtImportPrice.Text.Trim();
+                if (string.IsNullOrEmpty(importRaw))
                 {
-                    if (!decimal.TryParse(txtImportPrice.Text.Trim(), out importPrice) || importPrice < 0)
-                    {
-                        MessageBox.Show("Unit Import Price phải là số hợp lệ >= 0.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        return;
-                    }
+                    MessageBox.Show("Please enter unit import price.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (!Regex.IsMatch(importRaw, @"^\d+$"))
+                {
+                    MessageBox.Show("Unit import price may only contain digits (0-9), with no commas, dots, or other characters.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (!decimal.TryParse(importRaw, NumberStyles.None, CultureInfo.InvariantCulture, out decimal importPrice))
+                {
+                    MessageBox.Show("Unit import price must be a valid number.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (importPrice < MinImportPrice || importPrice > MaxImportPrice)
+                {
+                    MessageBox.Show($"Unit import price must be between {MinImportPrice:N0} and {MaxImportPrice:N0} VND.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (decimal.Truncate(importPrice) != importPrice)
+                {
+                    MessageBox.Show("Unit import price must be a whole number.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
                 }
 
                 var existing = _detailItems.FirstOrDefault(x => x.ProductId == selectedProduct.ProductId);
                 if (existing != null)
                 {
+                    if (existing.Quantity + quantity > MaxLineQuantity)
+                    {
+                        MessageBox.Show($"Total quantity per product cannot exceed {MaxLineQuantity}.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
                     existing.Quantity += quantity;
                     existing.ImportPrice = importPrice;
                 }
@@ -115,7 +152,14 @@ namespace WPFApp.Views.Staff
             {
                 if (_detailItems.Count == 0)
                 {
-                    MessageBox.Show("Phiếu nhập phải có ít nhất 1 sản phẩm.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    MessageBox.Show("Stock-in must have at least one product line.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                string note = txtNote.Text?.Trim() ?? string.Empty;
+                if (note.Length > MaxNoteLength)
+                {
+                    MessageBox.Show($"Note cannot exceed {MaxNoteLength} characters.", "Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
 
@@ -123,7 +167,7 @@ namespace WPFApp.Views.Staff
                 {
                     CreatedByStaffId = _staffId,
                     StockInDate = DateTime.Now,
-                    Note = string.IsNullOrWhiteSpace(txtNote.Text) ? null : txtNote.Text.Trim()
+                    Note = string.IsNullOrWhiteSpace(note) ? null : note
                 };
 
                 var details = _detailItems.Select(x => new StockInDetail
@@ -135,7 +179,7 @@ namespace WPFApp.Views.Staff
 
                 _stockInService.CreateStockIn(stockIn, details);
 
-                MessageBox.Show("Tạo phiếu nhập thành công.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Stock-in created successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 DialogResult = true;
                 Close();
             }

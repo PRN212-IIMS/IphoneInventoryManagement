@@ -41,7 +41,10 @@ namespace WPFApp.Views.Customer
 
         private void LoadProducts()
         {
-            _allProducts = GetProductsFromService();
+            _allProducts = GetProductsFromService()
+                .Where(p => IsActiveProduct(p))
+                .ToList();
+
             dgProducts.ItemsSource = _allProducts;
             RefreshFilterOptionsFromProducts();
         }
@@ -137,7 +140,7 @@ namespace WPFApp.Views.Customer
             string keyword = txtSearch.Text?.Trim() ?? string.Empty;
             string selectedColor = cbColor.SelectedItem?.ToString() ?? "All";
             string selectedStorage = cbStorage.SelectedItem?.ToString() ?? "All";
-            int requestedQty = ParseInt(txtQuantity.Text, 1);
+            
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -158,10 +161,6 @@ namespace WPFApp.Views.Customer
                 query = query.Where(p => string.Equals(GetStringValue(p, "StorageCapacity", "Storage"), selectedStorage, StringComparison.OrdinalIgnoreCase));
             }
 
-            if (requestedQty > 0)
-            {
-                query = query.Where(p => GetIntValue(p, "StockQuantity", "Quantity", "UnitsInStock") >= requestedQty);
-            }
 
             dgProducts.ItemsSource = query.ToList();
         }
@@ -169,7 +168,6 @@ namespace WPFApp.Views.Customer
         private void ResetFilter_Click(object sender, RoutedEventArgs e)
         {
             txtSearch.Clear();
-            txtQuantity.Text = "1";
             cbColor.SelectedIndex = 0;
             cbStorage.SelectedIndex = 0;
             dgProducts.ItemsSource = _allProducts;
@@ -186,23 +184,10 @@ namespace WPFApp.Views.Customer
                     return;
                 }
 
-                int quantity = ParseInt(txtQuantity.Text, 1);
-                if (quantity <= 0)
-                {
-                    MessageBox.Show("Quantity must be greater than 0.");
-                    return;
-                }
-
                 int stock = GetIntValue(selected, "StockQuantity", "Quantity", "UnitsInStock");
                 if (stock <= 0)
                 {
                     MessageBox.Show("This product is out of stock.");
-                    return;
-                }
-
-                if (quantity > stock)
-                {
-                    MessageBox.Show("Quantity exceeds available stock.");
                     return;
                 }
 
@@ -220,7 +205,7 @@ namespace WPFApp.Views.Customer
                     Model = GetStringValue(selected, "Model"),
                     Color = GetStringValue(selected, "Color"),
                     StorageCapacity = GetStringValue(selected, "StorageCapacity", "Storage"),
-                    Quantity = quantity,
+                    Quantity = 1,
                     UnitPrice = GetDecimalValue(selected, "Price", "UnitPrice")
                 };
 
@@ -314,6 +299,51 @@ namespace WPFApp.Views.Customer
         private static int ParseInt(string? text, int defaultValue)
         {
             return int.TryParse(text, out var value) ? value : defaultValue;
+        }
+
+        private static bool IsActiveProduct(object product)
+        {
+            var type = product.GetType();
+
+            var statusProp = type.GetProperty("Status");
+            if (statusProp != null)
+            {
+                var value = statusProp.GetValue(product);
+
+                if (value is bool b) return b;
+
+                if (value != null)
+                {
+                    var text = value.ToString()?.Trim();
+                    if (string.Equals(text, "Active", StringComparison.OrdinalIgnoreCase)) return true;
+                    if (string.Equals(text, "Inactive", StringComparison.OrdinalIgnoreCase)) return false;
+
+                    if (int.TryParse(text, out int num))
+                    {
+                        return num == 1;
+                    }
+
+                    if (bool.TryParse(text, out bool parsedBool))
+                    {
+                        return parsedBool;
+                    }
+                }
+            }
+
+            var isActiveProp = type.GetProperty("IsActive");
+            if (isActiveProp != null)
+            {
+                var value = isActiveProp.GetValue(product);
+
+                if (value is bool b) return b;
+
+                if (value != null && bool.TryParse(value.ToString(), out bool parsedBool))
+                {
+                    return parsedBool;
+                }
+            }
+
+            return true;
         }
     }
 }

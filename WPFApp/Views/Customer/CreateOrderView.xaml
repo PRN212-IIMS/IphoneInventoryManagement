@@ -111,7 +111,8 @@
                         Padding="8">
                     <DataGrid x:Name="dgCart"
                               AutoGenerateColumns="False"
-                              IsReadOnly="True"
+                              IsReadOnly="False"
+CellEditEnding="dgCart_CellEditEnding"
                               RowHeaderWidth="0"
                               SelectionMode="Single"
                               SelectionUnit="FullRow"
@@ -138,8 +139,8 @@
                                                 Binding="{Binding StorageCapacity}"
                                                 Width="90"/>
                             <DataGridTextColumn Header="Qty"
-                                                Binding="{Binding Quantity}"
-                                                Width="55"/>
+                    Binding="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}"
+                    Width="55"/>
                             <DataGridTextColumn Header="Unit Price"
                                                 Binding="{Binding UnitPrice, StringFormat={}{0:N0}}"
                                                 Width="105"/>

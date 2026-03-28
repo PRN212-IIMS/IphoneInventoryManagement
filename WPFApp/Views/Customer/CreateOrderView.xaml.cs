@@ -156,5 +156,36 @@ namespace WPFApp.Views.Customer
                 MessageBox.Show(ex.Message);
             }
         }
+        private void dgCart_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            try
+            {
+                if (e.Row.Item is not CartItemViewModel item)
+                    return;
+
+                if (e.EditingElement is TextBox tb)
+                {
+                    if (!int.TryParse(tb.Text, out int qty) || qty <= 0)
+                    {
+                        MessageBox.Show("Quantity must be greater than 0.");
+                        item.Quantity = 1;
+                    }
+                    else
+                    {
+                        item.Quantity = qty;
+                    }
+                }
+
+                dgCart.ItemsSource = null;
+                dgCart.ItemsSource = CartStore.Items;
+
+                txtSummaryCount.Text = $"Items: {CartStore.Items.Sum(x => x.Quantity)}";
+                txtSummaryTotal.Text = $"Total Amount: {CartStore.GetTotalAmount():N0}";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
     }
 }

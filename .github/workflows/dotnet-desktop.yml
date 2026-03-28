@@ -1,0 +1,44 @@
+name: WPF CI Pipeline
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-test-publish:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore IphoneInventoryManagement.slnx
+
+      - name: Build solution
+        run: dotnet build IphoneInventoryManagement.slnx --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test UnitTest/UnitTest.csproj --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
+
+      - name: Publish WPF app
+        run: dotnet publish WPFApp/WPFApp.csproj -c Release -o ./publish
+
+      - name: Upload published artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wpfapp-release
+          path: ./publish
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: "**/*.trx"

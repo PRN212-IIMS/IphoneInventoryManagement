@@ -32,7 +32,8 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="240"/>
+                    <ColumnDefinition Width="70"/>
                     <ColumnDefinition Width="150"/>
                     <ColumnDefinition Width="300"/>
                 </Grid.ColumnDefinitions>
@@ -46,19 +47,32 @@
                            Text="Customer (optional):"
                            VerticalAlignment="Center"
                            FontWeight="SemiBold"/>
-                <ComboBox x:Name="cbCustomers"
-                          Grid.Row="0" Grid.Column="1"
-                          Height="32"
-                          Margin="0,0,12,0"
-                          DisplayMemberPath="FullName"
-                          SelectedValuePath="CustomerId"/>
 
-                <TextBlock Grid.Row="0" Grid.Column="2"
+                <ComboBox x:Name="cbCustomers"
+                          Grid.Row="0"
+                          Grid.Column="1"
+                          Height="32"
+                          Margin="0,0,8,0"
+                          DisplayMemberPath="FullName"
+                          SelectedValuePath="CustomerId"
+                          SelectionChanged="cbCustomers_SelectionChanged"/>
+
+                <Button x:Name="btnClearCustomer"
+                        Grid.Row="0"
+                        Grid.Column="2"
+                        Content="Clear"
+                        Width="60"
+                        Height="32"
+                        Click="btnClearCustomer_Click"/>
+
+                <TextBlock Grid.Row="0" Grid.Column="3"
                            Text="Receiver Name:"
                            VerticalAlignment="Center"
                            FontWeight="SemiBold"/>
+
                 <TextBox x:Name="txtReceiverName"
-                         Grid.Row="0" Grid.Column="3"
+                         Grid.Row="0"
+                         Grid.Column="4"
                          Height="32"
                          VerticalContentAlignment="Center"/>
 
@@ -66,18 +80,22 @@
                            Text="Receiver Phone:"
                            VerticalAlignment="Center"
                            FontWeight="SemiBold"/>
+
                 <TextBox x:Name="txtReceiverPhone"
-                         Grid.Row="1" Grid.Column="1"
+                         Grid.Row="1"
+                         Grid.Column="1"
                          Height="32"
-                         Margin="0,0,12,0"
+                         Margin="0,0,8,0"
                          VerticalContentAlignment="Center"/>
 
-                <TextBlock Grid.Row="1" Grid.Column="2"
+                <TextBlock Grid.Row="1" Grid.Column="3"
                            Text="Shipping Address:"
                            VerticalAlignment="Center"
                            FontWeight="SemiBold"/>
+
                 <TextBox x:Name="txtShippingAddress"
-                         Grid.Row="1" Grid.Column="3"
+                         Grid.Row="1"
+                         Grid.Column="4"
                          Height="32"
                          VerticalContentAlignment="Center"/>
             </Grid>
