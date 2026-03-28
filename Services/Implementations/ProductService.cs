@@ -31,6 +31,10 @@ namespace Services.Implementations
             _productRepository = new ProductRepository();
         }
 
+        public ProductService(IProductRepository productRepository)
+        {
+            _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
+        }
         public List<Product> GetAllProducts()
         {
             return _productRepository.GetAllProducts();
