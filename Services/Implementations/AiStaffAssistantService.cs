@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -69,18 +69,6 @@ public class AiStaffAssistantService : IAiStaffAssistantService
         if (IsProductStockLookupIntent(normalized))
         {
             answer = BuildProductStockLookupAnswer(question);
-            return true;
-        }
-
-        if (IsBestSellerIntent(normalized))
-        {
-            answer = BuildBestSellerAnswer();
-            return true;
-        }
-
-        if (IsWorstSellerIntent(normalized))
-        {
-            answer = BuildWorstSellerAnswer();
             return true;
         }
 
@@ -212,69 +200,28 @@ public class AiStaffAssistantService : IAiStaffAssistantService
         return builder.ToString().Trim();
     }
 
-    private string BuildBestSellerAnswer()
-    {
-        var sales = BuildSalesByProduct();
-        var topProducts = sales
-            .OrderByDescending(x => x.QuantitySold)
-            .ThenBy(x => x.Product.ProductName)
-            .Take(5)
-            .ToList();
-
-        var builder = new StringBuilder();
-        builder.AppendLine("San pham ban chay nhat");
-        builder.AppendLine();
-
-        if (topProducts.Count == 0)
-        {
-            builder.AppendLine("Chua co du lieu ban hang hop le de thong ke san pham ban chay.");
-            return builder.ToString().Trim();
-        }
-
-        foreach (var item in topProducts)
-        {
-            builder.AppendLine($"- #{item.Product.ProductId} {item.Product.ProductName} | Da ban: {item.QuantitySold} cai | Ton hien tai: {item.Product.StockQuantity}");
-        }
-
-        return builder.ToString().Trim();
-    }
-
-    private string BuildWorstSellerAnswer()
-    {
-        var sales = BuildSalesByProduct();
-        var bottomProducts = sales
-            .OrderBy(x => x.QuantitySold)
-            .ThenBy(x => x.Product.ProductName)
-            .Take(5)
-            .ToList();
-
-        var builder = new StringBuilder();
-        builder.AppendLine("San pham ban e nhat");
-        builder.AppendLine();
-
-        if (bottomProducts.Count == 0)
-        {
-            builder.AppendLine("Chua co du lieu ban hang hop le de thong ke san pham ban e.");
-            return builder.ToString().Trim();
-        }
-
-        foreach (var item in bottomProducts)
-        {
-            builder.AppendLine($"- #{item.Product.ProductId} {item.Product.ProductName} | Da ban: {item.QuantitySold} cai | Ton hien tai: {item.Product.StockQuantity}");
-        }
-
-        return builder.ToString().Trim();
-    }
-
     private string BuildProductStockLookupAnswer(string question)
     {
-        var product = FindProductFromQuestion(question);
-        if (product is null)
+        var matches = FindProductsFromQuestion(question);
+        if (matches.Count == 0)
         {
             return "Khong xac dinh duoc ten san pham trong cau hoi, hoac khong tim thay san pham phu hop trong he thong.";
         }
 
-        return $"San pham {product.ProductName} hien con {product.StockQuantity} cai trong kho.";
+        if (matches.Count > 1)
+        {
+            var builder = new StringBuilder();
+            builder.AppendLine("Tim thay nhieu san pham phu hop. Hay noi ro hon ten san pham can kiem tra:");
+            foreach (var product in matches.Take(5))
+            {
+                builder.AppendLine($"- #{product.ProductId} {product.ProductName} | Mau: {Safe(product.Color)} | Dung luong: {Safe(product.StorageCapacity)}");
+            }
+
+            return builder.ToString().Trim();
+        }
+
+        var productMatch = matches[0];
+        return $"San pham {productMatch.ProductName} hien con {productMatch.StockQuantity} cai trong kho.";
     }
 
     private string BuildInactiveProductsAnswer()
@@ -406,60 +353,46 @@ public class AiStaffAssistantService : IAiStaffAssistantService
         return builder.ToString().Trim();
     }
 
-    private List<ProductSalesSummary> BuildSalesByProduct()
-    {
-        var products = _productService.GetAllProducts();
-        var productById = products.ToDictionary(p => p.ProductId);
-        var orders = _orderService.GetAllOrders()
-            .Where(o => !string.Equals(o.Status, "Cancelled", StringComparison.OrdinalIgnoreCase))
-            .ToList();
-
-        var soldByProductId = new Dictionary<int, int>();
-        foreach (var order in orders)
-        {
-            foreach (var detail in order.OrderDetails)
-            {
-                if (!soldByProductId.ContainsKey(detail.ProductId))
-                {
-                    soldByProductId[detail.ProductId] = 0;
-                }
-
-                soldByProductId[detail.ProductId] += detail.Quantity;
-            }
-        }
-
-        return products
-            .Where(p => p.Status)
-            .Select(p => new ProductSalesSummary
-            {
-                Product = p,
-                QuantitySold = soldByProductId.TryGetValue(p.ProductId, out var sold) ? sold : 0
-            })
-            .ToList();
-    }
-
-    private Product? FindProductFromQuestion(string question)
+    private List<Product> FindProductsFromQuestion(string question)
     {
         var products = _productService.GetAllProducts()
             .OrderByDescending(p => p.ProductName.Length)
             .ToList();
 
         var normalizedQuestion = Normalize(question);
-        var directMatch = products.FirstOrDefault(p => normalizedQuestion.Contains(Normalize(p.ProductName)));
-        if (directMatch is not null)
+        var directMatches = products
+            .Where(p => normalizedQuestion.Contains(Normalize(p.ProductName)))
+            .Take(5)
+            .ToList();
+
+        if (directMatches.Count > 0)
         {
-            return directMatch;
+            return directMatches;
         }
 
-        var cleaned = Regex.Replace(normalizedQuestion, @"san pham|product|con bao nhieu|bao nhieu cai|bao nhieu chiec|so luong|ton kho|la bao nhieu|\?|\.", " ", RegexOptions.IgnoreCase);
+        var cleaned = Regex.Replace(normalizedQuestion, @"san pham|product|con bao nhieu|bao nhieu cai|bao nhieu chiec|so luong|ton kho|la bao nhieu|may|cai|\?|\.", " ", RegexOptions.IgnoreCase);
         cleaned = Regex.Replace(cleaned, @"\s+", " ").Trim();
-        if (string.IsNullOrWhiteSpace(cleaned))
+        if (string.IsNullOrWhiteSpace(cleaned) || cleaned.Length < 3)
         {
-            return null;
+            return [];
         }
 
-        var searchResults = _productService.SearchProducts(cleaned);
-        return searchResults.FirstOrDefault();
+        var searchResults = products
+            .Where(p => ContainsAllImportantTerms(Normalize(p.ProductName), cleaned))
+            .Take(5)
+            .ToList();
+
+        return searchResults;
+    }
+
+    private static bool ContainsAllImportantTerms(string normalizedProductName, string cleanedQuestion)
+    {
+        var terms = cleanedQuestion.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Where(term => term.Length >= 2)
+            .Distinct()
+            .ToList();
+
+        return terms.Count > 0 && terms.All(normalizedProductName.Contains);
     }
 
     private async Task<string> AskModelWithSnapshotAsync(string question, AiIntegrationSettings settings, CancellationToken cancellationToken)
@@ -541,22 +474,11 @@ public class AiStaffAssistantService : IAiStaffAssistantService
             "con it hang nhat", "it hang nhat", "ton kho it nhat", "lowest stock", "least stock");
     }
 
-    private static bool IsBestSellerIntent(string normalizedQuestion)
-    {
-        return ContainsAny(normalizedQuestion,
-            "ban chay nhat", "best seller", "best-selling", "top selling", "ban nhieu nhat");
-    }
-
-    private static bool IsWorstSellerIntent(string normalizedQuestion)
-    {
-        return ContainsAny(normalizedQuestion,
-            "ban e nhat", "it nguoi mua nhat", "worst seller", "least selling", "ban it nhat");
-    }
-
     private static bool IsProductStockLookupIntent(string normalizedQuestion)
     {
-        return ContainsAny(normalizedQuestion,
-            "con bao nhieu cai", "con bao nhieu", "ton kho bao nhieu", "bao nhieu cai", "stock bao nhieu", "how many left");
+        return ContainsAny(normalizedQuestion, "san pham", "product")
+            && ContainsAny(normalizedQuestion,
+                "con bao nhieu cai", "con bao nhieu", "ton kho bao nhieu", "bao nhieu cai", "stock bao nhieu", "how many left");
     }
 
     private static bool IsInactiveProductsIntent(string normalizedQuestion)
@@ -584,7 +506,7 @@ public class AiStaffAssistantService : IAiStaffAssistantService
     {
         return ContainsAny(normalizedQuestion,
             "product", "products", "color", "storage", "san pham", "mau", "dung luong", "bo nho")
-            || Regex.IsMatch(normalizedQuestion, "\\b(64|128|256|512)\\s?gb\\b|\\b1tb\\b", RegexOptions.IgnoreCase);
+            || Regex.IsMatch(normalizedQuestion, @"\b(64|128|256|512)\s?gb\b|\b1tb\b", RegexOptions.IgnoreCase);
     }
 
     private static bool ContainsAny(string text, params string[] keywords)
@@ -594,7 +516,26 @@ public class AiStaffAssistantService : IAiStaffAssistantService
 
     private static string Normalize(string text)
     {
-        return text.Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return string.Empty;
+        }
+
+        var normalized = text.Trim().ToLowerInvariant()
+            .Replace((char)0x0111, 'd')
+            .Replace((char)0x0110, 'd')
+            .Normalize(NormalizationForm.FormD);
+
+        var builder = new StringBuilder(normalized.Length);
+        foreach (var ch in normalized)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(ch) != UnicodeCategory.NonSpacingMark)
+            {
+                builder.Append(ch);
+            }
+        }
+
+        return builder.ToString().Normalize(NormalizationForm.FormC);
     }
 
     private static int ExtractThreshold(string question, int defaultValue)
@@ -624,7 +565,7 @@ public class AiStaffAssistantService : IAiStaffAssistantService
             .OrderByDescending(c => c.Length)
             .ToList();
 
-        return colors.FirstOrDefault(color => normalizedQuestion.Contains(color.ToLowerInvariant()));
+        return colors.FirstOrDefault(color => normalizedQuestion.Contains(Normalize(color)));
     }
 
     private static string? ExtractStorage(string normalizedQuestion)
@@ -687,12 +628,6 @@ public class AiStaffAssistantService : IAiStaffAssistantService
     private static string FormatMoney(decimal amount)
     {
         return amount.ToString("N0", CultureInfo.InvariantCulture);
-    }
-
-    private sealed class ProductSalesSummary
-    {
-        public BusinessObjects.Product Product { get; set; } = null!;
-        public int QuantitySold { get; set; }
     }
 
     private sealed class AiIntegrationSettings
